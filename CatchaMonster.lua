@@ -13,10 +13,10 @@ local MgrMonsterClient = require(ReplicatedStorage.ClientLogic.Monster.MgrMonste
 
 
 local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/xHeptc/Kavo-UI-Library/main/source.lua"))()
-local Window = Library.CreateLib("Edited Hub | Catch a Monster [BETA], made by 虚空影", "Midnight")
+local Window = Library.CreateLib("VeryFun Auto Farm Catch a Monster")
 
 
-local Tab = Window:NewTab("Main")
+local Tab = Window:NewTab("Menu")
 local Section = Tab:NewSection("Automatics")
 
 local Mapinfo = {
@@ -123,7 +123,7 @@ function Collection:getAllAliveMonsterIdsByName(monsterName)
     return aliveIds
 end
 label = Section:NewLabel("Position: N/A")
-Section:NewSlider("Set Fps cap", "Spin Delay Position", 120, 5, function(s) -- 500 (MaxValue) | 0 (MinValue)
+Section:NewSlider("Set Fps", "Spin Delay Position", 120, 5, function(s) -- 500 (MaxValue) | 0 (MinValue)
     _G.FPSCAP = s
 end)
 game:GetService("RunService").RenderStepped:Connect(function()
@@ -135,7 +135,7 @@ Section:NewButton("Set Position", "ButtonInfo", function()
     wait()
     label:UpdateLabel("Position: "..math.floor(_G.SetPosition.X)..", "..math.floor(_G.SetPosition.Y)..", "..math.floor(_G.SetPosition.Z))
 end)
-Section:NewDropdown("Selected Mobs", "Selected Mobs to farm",listMonster, function(v)
+Section:NewDropdown("SetFarm Mobs", "Selected Mobs to farm",listMonster, function(v)
     _G.SelectedMonster = v
 end)
 _G.SpinPositionFindBossDelay = 10
@@ -219,7 +219,9 @@ Section:NewToggle('Auto Farm Mobs', "auto farm mob", function(state)
                                         task.wait(1)
                                     end
                                 end
-                            until not (v and v.Parent and v.Root and v.Root:FindFirstChild("ClickDetector") and v.Root.ClickDetector) or not _G.AutoFarmMobs
+                            until not (v and v.Parent and v.Root and v.Root:FindFirstChild("ClickDetector") and v.Root.ClickDetector) or not _G.AutoFarmMobs or _G.PathTool.LogicNumber.LessThanOrEqualTo(
+                                    _G.PathTool.LogicNumber.FixLogicNumber(health.Value), 0
+                                )
                         end
                     end
                 end
@@ -263,7 +265,9 @@ Section:NewToggle("Auto Farm Boss", "auto farm boss", function(state)
                                     task.wait(1)
                                 end
                             end
-                        until not (v and v.Parent and v.Root and v.Root:FindFirstChild("ClickDetector") and v.Root.ClickDetector) or not _G.AutoFarmBoss
+                        until not (v and v.Parent and v.Root and v.Root:FindFirstChild("ClickDetector") and v.Root.ClickDetector) or not _G.AutoFarmBoss or _G.PathTool.LogicNumber.LessThanOrEqualTo(
+                                    _G.PathTool.LogicNumber.FixLogicNumber(health.Value), 0
+                                )
                     end
                 end
             end
@@ -311,9 +315,8 @@ end)
 Section:NewKeybind("KeybindText", "KeybindInfo", Enum.KeyCode.F, function()
 	Library:ToggleUI()
 end)
-local vu = game:GetService("VirtualUser")
-game:GetService("Players").LocalPlayer.Idled:Connect(function()
-    vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+local bb=game:service'VirtualUser'
+game:service'Players'.LocalPlayer.Idled:connect(function()
+    bb:CaptureController()
+    bb:ClickButton2(Vector2.new())
 end)
