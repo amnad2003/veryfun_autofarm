@@ -1,5 +1,5 @@
 return {
     "63a63cfd56d040b1c991e260aded6afd46b8e7213a1cfb07ce4d0fd444194468",
-    "HWID_ABCDEF",
+    "82874627a8058e48e33e6a64d3e2866f2b48e78a4c72dab694a3fe2d9d21676d",
     "HWID_ABCDEF",
 }
