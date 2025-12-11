@@ -1,4 +1,4 @@
-
+--1
 -- ========== Services & base ==========
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -166,7 +166,7 @@ end
 currentTheme = THEMES.Mint
 
 local ToggleButton = Instance.new("ImageButton", ScreenGui)
-ToggleButton.Size = UDim2.new(0,35,0,35)
+ToggleButton.Size = UDim2.new(0,31,0,31)
 ToggleButton.Position = UDim2.new(0,18,0,140)
 ToggleButton.Image = LOGO_ID
 ToggleButton.ImageColor3 = currentTheme.highlight
@@ -174,7 +174,7 @@ ToggleButton.BackgroundColor3 = currentTheme.bg
 addCorner(ToggleButton,8)
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0.52, 0, 0.70, 0)
+MainFrame.Size = UDim2.new(0.52, 0, 0.85, 0)
 MainFrame.Position = UDim2.new(0.5, 0, 0.4, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 MainFrame.BackgroundColor3 = currentTheme.bg
