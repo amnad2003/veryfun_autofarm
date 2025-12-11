@@ -1,4 +1,4 @@
---1
+
 -- ========== Services & base ==========
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -371,14 +371,14 @@ local savedPos = MainFrame.Position
 local function ToggleUI()
     if MainFrame.Visible then
         savedPos = MainFrame.Position
-        TweenService:Create(MainFrame, tweenClose, {Size = UDim2.new(0,0,0,0)}):Play()
+        TweenService:Create(MainFrame, tweenClose, {Size = UDim2.new(0,31,0,31)}):Play()
         task.wait(0.18)
         MainFrame.Visible = false
     else
         MainFrame.Position = savedPos
         MainFrame.Size = UDim2.new(0,0,0,0)
         MainFrame.Visible = true
-        TweenService:Create(MainFrame, tweenOpen, {Size = UDim2.new(0.36,0,0.50,0)}):Play()
+        TweenService:Create(MainFrame, tweenOpen, {Size = UDim2.new(0.52,0,0.85,0)}):Play()
     end
 end
 ToggleButton.MouseButton1Click:Connect(ToggleUI)
