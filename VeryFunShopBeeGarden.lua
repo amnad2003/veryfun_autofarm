@@ -1,9 +1,3 @@
---========================================--
--- VERYFUN SHOP - FINAL ALL-IN - Compact Mobile (Icon+Text Sidebar)
--- Final single-file: HWID, AutoBee, AutoEgg, AutoGhost, AutoRocket,
--- Anti-AFK, Left-click AFK, applyFPS, AutoScale, AutoFit, FixText
--- MainFrame: 0.36 x 0.50, Sidebar: 0.18, Content: 0.82
---========================================--
 
 -- ========== Services & base ==========
 local Players = game:GetService("Players")
@@ -172,16 +166,16 @@ end
 currentTheme = THEMES.Mint
 
 local ToggleButton = Instance.new("ImageButton", ScreenGui)
-ToggleButton.Size = UDim2.new(0,44,0,44)
-ToggleButton.Position = UDim2.new(0,12,0,140)
+ToggleButton.Size = UDim2.new(0,35,0,35)
+ToggleButton.Position = UDim2.new(0,18,0,140)
 ToggleButton.Image = LOGO_ID
 ToggleButton.ImageColor3 = currentTheme.highlight
 ToggleButton.BackgroundColor3 = currentTheme.bg
 addCorner(ToggleButton,8)
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0.36, 0, 0.50, 0)
-MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.Size = UDim2.new(0.52, 0, 0.70, 0)
+MainFrame.Position = UDim2.new(0.5, 0, 0.4, 0)
 MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 MainFrame.BackgroundColor3 = currentTheme.bg
 addCorner(MainFrame,10)
