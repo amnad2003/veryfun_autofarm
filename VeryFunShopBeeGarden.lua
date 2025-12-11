@@ -1,12 +1,11 @@
 --========================================--
--- VERYFUN SHOP - FULL MOBILE UI + AUTO SYSTEMS
--- (Single file; mobile optimized: MainFrame=0.42x0.55, Sidebar=0.22)
+-- VERYFUN SHOP - FINAL ALL-IN - Compact Mobile (Icon+Text Sidebar)
+-- Final single-file: HWID, AutoBee, AutoEgg, AutoGhost, AutoRocket,
+-- Anti-AFK, Left-click AFK, applyFPS, AutoScale, AutoFit, FixText
+-- MainFrame: 0.36 x 0.50, Sidebar: 0.18, Content: 0.82
 --========================================--
 
--- HWID fetch URL (unchanged)
-local HWID_URL = "https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/hwidPremium_lock.lua"
-
--- Services
+-- ========== Services & base ==========
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
@@ -14,22 +13,24 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
+local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
--- Basic constants
-local UI_NAME = "VeryFunSHOP_MobileFull"
+-- ========== Constants ==========
+local UI_NAME = "VeryFunSHOP_FinalCompact"
 local LOGO_ID = "rbxassetid://82270910588453"
+local HWID_URL = "https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/hwidPremium_lock.lua"
 
--- Theme list
+-- ========== Theme list ==========
 local THEMES = {
     Mint =   { bg = Color3.fromHex("#0F1720"), accent = Color3.fromHex("#1F2937"), highlight = Color3.fromHex("#66FFCC") },
     Red =    { bg = Color3.fromHex("#0F0A0A"), accent = Color3.fromHex("#241111"), highlight = Color3.fromHex("#FF5C5C") },
     Blue =   { bg = Color3.fromHex("#071022"), accent = Color3.fromHex("#0E2438"), highlight = Color3.fromHex("#7FB3FF") },
     Pink =   { bg = Color3.fromHex("#120812"), accent = Color3.fromHex("#261429"), highlight = Color3.fromHex("#FF8FD8") },
     Purple = { bg = Color3.fromHex("#0B0612"), accent = Color3.fromHex("#221633"), highlight = Color3.fromHex("#B47DFF") },
-    Gold =   { bg = Color3.fromHex("#0B0B06"), accent = Color3.fromHex("#2A260F"), highlight = Color3.fromHex("#FFC857") },
+    Gold =   { bg = Color3.fromHex("#0B0B06"), accent = Color3.fromHex("#2A260F"), highlight = Color3.fromHex("#FFC857") }
 }
 local currentTheme = THEMES.Mint
 
@@ -37,9 +38,7 @@ local currentTheme = THEMES.Mint
 local old = PlayerGui:FindFirstChild(UI_NAME)
 if old then old:Destroy() end
 
--- =========================
--- HWID Helpers & Screen
--- =========================
+-- ========= HWID helpers & check =========
 local function GetHWID()
     if gethwid then return tostring(gethwid()) end
     if syn and syn.get_hwid then return tostring(syn.get_hwid()) end
@@ -49,7 +48,6 @@ end
 
 local myHWID = GetHWID()
 local whitelistData = {}
-
 do
     local ok, raw = pcall(function() return game:HttpGet(HWID_URL) end)
     if ok and raw then
@@ -73,47 +71,41 @@ local function ShowHWIDScreen()
     gui.Name = UI_NAME .. "_HWID"
     gui.ResetOnSpawn = false
 
-    local blur = Instance.new("BlurEffect", game:GetService("Lighting"))
-    blur.Size = 15
+    local blur = Instance.new("BlurEffect", Lighting); blur.Size = 12
 
     local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, 440, 0, 260)
-    frame.Position = UDim2.new(0.5, -220, 0.5, -130)
-    frame.BackgroundColor3 = Color3.fromRGB(20,20,20)
+    frame.Size = UDim2.new(0, 420, 0, 240)
+    frame.Position = UDim2.new(0.5, -210, 0.5, -120)
+    frame.BackgroundColor3 = Color3.fromRGB(18,18,20)
     frame.BorderSizePixel = 0
-    local uc = Instance.new("UICorner", frame); uc.CornerRadius = UDim.new(0,14)
-    local stroke = Instance.new("UIStroke", frame); stroke.Color = Color3.fromRGB(120,120,120); stroke.Thickness = 1
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 12)
+    local stroke = Instance.new("UIStroke", frame); stroke.Color = Color3.fromRGB(100,100,100); stroke.Thickness = 1
 
     local bar = Instance.new("Frame", frame); bar.Size = UDim2.new(1,0,0,44); bar.BackgroundColor3 = Color3.fromRGB(28,28,28)
-    Instance.new("UICorner", bar).CornerRadius = UDim.new(0,14)
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(0,12)
 
-    local title = Instance.new("TextLabel", bar)
-    title.Size = UDim2.new(1,-60,1,0); title.Position = UDim2.new(0,12,0,0)
-    title.BackgroundTransparency = 1; title.Font = Enum.Font.GothamBold; title.TextSize = 18
-    title.TextColor3 = Color3.fromRGB(240,80,80); title.Text = "VERYFUN SHOP — HWID LOCK"; title.TextXAlignment = Enum.TextXAlignment.Left
+    local title = Instance.new("TextLabel", bar); title.Size = UDim2.new(1,-60,1,0); title.Position = UDim2.new(0,12,0,0)
+    title.BackgroundTransparency = 1; title.Font = Enum.Font.GothamBold; title.TextSize = 18; title.TextColor3 = Color3.fromRGB(240,80,80)
+    title.Text = "VERYFUN SHOP — HWID LOCK"; title.TextXAlignment = Enum.TextXAlignment.Left
 
-    local close = Instance.new("TextButton", bar)
-    close.Size = UDim2.new(0,44,0,34); close.Position = UDim2.new(1,-52,0.5,-17)
-    close.BackgroundTransparency = 1; close.Font = Enum.Font.GothamBold; close.Text = "✕"; close.TextSize = 20
-    close.TextColor3 = Color3.fromRGB(230,80,80)
-    close.MouseButton1Click:Connect(function() gui:Destroy(); blur:Destroy() end)
+    local close = Instance.new("TextButton", bar); close.Size = UDim2.new(0,44,0,34); close.Position = UDim2.new(1,-52,0.5,-17)
+    close.BackgroundTransparency = 1; close.Font = Enum.Font.GothamBold; close.Text = "✕"; close.TextSize = 20; close.TextColor3 = Color3.fromRGB(230,80,80)
+    close.MouseButton1Click:Connect(function() frame:Destroy(); blur:Destroy() end)
 
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(1,-24,0,120); label.Position = UDim2.new(0,12,0,56)
-    label.BackgroundTransparency = 1; label.Font = Enum.Font.Gotham; label.TextSize = 14; label.TextColor3 = Color3.fromRGB(230,230,230)
-    label.TextWrapped = true
-    label.Text = "HWID ของคุณ:\n" .. tostring(myHWID)
+    local hwidLabel = Instance.new("TextLabel", frame)
+    hwidLabel.Size = UDim2.new(1,-24,0,120); hwidLabel.Position = UDim2.new(0,12,0,56)
+    hwidLabel.BackgroundTransparency = 1; hwidLabel.Font = Enum.Font.Gotham; hwidLabel.TextSize = 14; hwidLabel.TextColor3 = Color3.fromRGB(230,230,230)
+    hwidLabel.TextWrapped = true; hwidLabel.Text = "HWID ของคุณ:\n" .. tostring(myHWID)
 
     local copyBtn = Instance.new("TextButton", frame)
-    copyBtn.Size = UDim2.new(0,200,0,36); copyBtn.Position = UDim2.new(0.5,-100,1,-52)
-    copyBtn.BackgroundColor3 = Color3.fromRGB(60,60,60); copyBtn.Font = Enum.Font.GothamBold
-    copyBtn.Text = "คัดลอก HWID"; copyBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    copyBtn.Size = UDim2.new(0,180,0,34); copyBtn.Position = UDim2.new(0.5,-90,1,-54)
+    copyBtn.BackgroundColor3 = Color3.fromRGB(64,64,64); copyBtn.Font = Enum.Font.GothamBold; copyBtn.Text = "คัดลอก HWID"; copyBtn.TextColor3 = Color3.new(1,1,1)
     Instance.new("UICorner", copyBtn).CornerRadius = UDim.new(0,8)
     copyBtn.MouseButton1Click:Connect(function()
-        pcall(function() setclipboard(tostring(myHWID)) end)
+        pcall(setclipboard, tostring(myHWID))
         copyBtn.Text = "คัดลอกแล้ว!"
         copyBtn.BackgroundColor3 = Color3.fromRGB(50,140,60)
-        task.delay(1.2, function() if copyBtn.Parent then copyBtn.Text = "คัดลอก HWID"; copyBtn.BackgroundColor3 = Color3.fromRGB(60,60,60) end end)
+        task.delay(1.2, function() if copyBtn.Parent then copyBtn.Text = "คัดลอก HWID"; copyBtn.BackgroundColor3 = Color3.fromRGB(64,64,64) end end)
     end)
 end
 
@@ -122,9 +114,7 @@ if not IsHWIDAllowed() then
     return
 end
 
--- =========================
--- applyFPS: auto-detect executor functions
--- =========================
+-- ========== applyFPS (auto detect) ==========
 local function applyFPS(value)
     value = tonumber(value)
     if not value or value < 1 then return end
@@ -135,76 +125,107 @@ local function applyFPS(value)
     warn("⚠ Executor ของคุณอาจไม่รองรับการตั้ง FPS")
 end
 
--- =========================
--- UI Creation (Mobile)
--- =========================
-local ScreenGui = Instance.new("ScreenGui")
+-- ========== UI Creation ==========
+local ScreenGui = Instance.new("ScreenGui", PlayerGui)
 ScreenGui.Name = UI_NAME
-ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
 
--- small UIScale for mobile-friendly (works across devices)
+-- Auto UIScale responsive
 local uiScale = Instance.new("UIScale", ScreenGui)
-uiScale.Scale = 1 -- can be adjusted in Settings if wanted
+do
+    local w = workspace.CurrentCamera and workspace.CurrentCamera.ViewportSize.X or 800
+    if w <= 360 then uiScale.Scale = 0.68
+    elseif w <= 480 then uiScale.Scale = 0.78
+    elseif w <= 720 then uiScale.Scale = 0.88
+    else uiScale.Scale = 1 end
+end
+
+-- ========== Utility: FixText (prevent overflow) ==========
+local function FixText(obj)
+    if not obj then return end
+    -- apply common safe properties for labels/buttons/textboxes
+    if obj:IsA("TextLabel") or obj:IsA("TextButton") or obj:IsA("TextBox") then
+        obj.TextWrapped = true
+        obj.TextXAlignment = obj.TextXAlignment or Enum.TextXAlignment.Left
+        obj.TextYAlignment = obj.TextYAlignment or Enum.TextYAlignment.Center
+        obj.ClipsDescendants = true
+        -- UITextSizeConstraint to auto-shrink text but not below min
+        local constr = obj:FindFirstChildOfClass("UITextSizeConstraint")
+        if not constr then
+            constr = Instance.new("UITextSizeConstraint")
+            constr.Parent = obj
+            constr.MaxTextSize = obj.TextSize or 14
+            constr.MinTextSize = 10
+        else
+            constr.MaxTextSize = obj.TextSize or constr.MaxTextSize
+        end
+    end
+end
+
+local function addCorner(parent, radius)
+    local c = Instance.new("UICorner", parent)
+    c.CornerRadius = UDim.new(0, radius or 8)
+    return c
+end
+
+
+currentTheme = THEMES.Mint
 
 local ToggleButton = Instance.new("ImageButton", ScreenGui)
 ToggleButton.Size = UDim2.new(0,44,0,44)
-ToggleButton.Position = UDim2.new(0, 14, 0, 160)
-ToggleButton.AnchorPoint = Vector2.new(0,0)
-ToggleButton.BackgroundColor3 = currentTheme.bg
+ToggleButton.Position = UDim2.new(0,12,0,140)
 ToggleButton.Image = LOGO_ID
 ToggleButton.ImageColor3 = currentTheme.highlight
-Instance.new("UICorner", ToggleButton).CornerRadius = UDim.new(0,8)
+ToggleButton.BackgroundColor3 = currentTheme.bg
+addCorner(ToggleButton,8)
 
 local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.new(0.42,0,0.55,0) -- mobile size
-MainFrame.Position = UDim2.new(0.5,0,0.5,0)
-MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
+MainFrame.Size = UDim2.new(0.36, 0, 0.50, 0)
+MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 MainFrame.BackgroundColor3 = currentTheme.bg
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,10)
+addCorner(MainFrame,10)
 local mfStroke = Instance.new("UIStroke", MainFrame); mfStroke.Color = currentTheme.accent; mfStroke.Thickness = 1
 
--- Title bar
 local TitleBar = Instance.new("Frame", MainFrame)
-TitleBar.Size = UDim2.new(1,0,0,42); TitleBar.BackgroundColor3 = currentTheme.accent
-Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0,10)
+TitleBar.Size = UDim2.new(1,0,0,36); TitleBar.BackgroundColor3 = currentTheme.accent
+addCorner(TitleBar,10)
 local Title = Instance.new("TextLabel", TitleBar)
 Title.Size = UDim2.new(1,-10,1,0); Title.Position = UDim2.new(0,10,0,0)
-Title.BackgroundTransparency = 1; Title.Text = "VeryFun SHOP | Mobile UI"
-Title.Font = Enum.Font.GothamSemibold; Title.TextSize = 15; Title.TextColor3 = Color3.new(1,1,1)
-Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.BackgroundTransparency = 1; Title.Font = Enum.Font.GothamSemibold; Title.TextSize = 14
+Title.TextColor3 = Color3.fromRGB(245,245,245); Title.Text = "VeryFun SHOP | BeeGarden"; Title.TextXAlignment = Enum.TextXAlignment.Left
+FixText(Title)
 
--- Theme container
 local ThemeContainer = Instance.new("Frame", TitleBar)
-ThemeContainer.Size = UDim2.new(0,110,1,0); ThemeContainer.Position = UDim2.new(1,-115,0,0); ThemeContainer.BackgroundTransparency = 1
+ThemeContainer.Size = UDim2.new(0,96,1,0); ThemeContainer.Position = UDim2.new(1,-100,0,0); ThemeContainer.BackgroundTransparency = 1
 local tList = Instance.new("UIListLayout", ThemeContainer); tList.FillDirection = Enum.FillDirection.Horizontal; tList.Padding = UDim.new(0,3); tList.HorizontalAlignment = Enum.HorizontalAlignment.Right
 
--- Sidebar & Content (mobile sizes)
 local Sidebar = Instance.new("Frame", MainFrame)
+Sidebar.Size = UDim2.new(0.18,0,1,-36)
+Sidebar.Position = UDim2.new(0,0,0,43)
 Sidebar.BackgroundTransparency = 1
-Sidebar.Size = UDim2.new(0.22, 0, 1, -42)
-Sidebar.Position = UDim2.new(0, 0, 0, 42)
-local sideList = Instance.new("UIListLayout", Sidebar); sideList.Padding = UDim.new(0,6); sideList.SortOrder = Enum.SortOrder.LayoutOrder
+local SideLayout = Instance.new("UIListLayout", Sidebar); SideLayout.Padding = UDim.new(0,6)
 
 local Content = Instance.new("Frame", MainFrame)
+Content.Size = UDim2.new(0.82,0,1,-36)
+Content.Position = UDim2.new(0.18,0,0,36)
 Content.BackgroundTransparency = 1
-Content.Size = UDim2.new(0.78,0,1,-42)
-Content.Position = UDim2.new(0.22,0,0,42)
 
--- Page system
 local Pages = {}
 local ActivePage = nil
-local function CreateCategory(name)
+
+local function CreateCategory(name, icon)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,-10,0,30)
-    btn.Text = "  " .. name
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
+    btn.Size = UDim2.new(1,-10,0,26)
     btn.BackgroundColor3 = currentTheme.accent
-    btn.TextColor3 = Color3.fromRGB(240,240,240)
+    btn.TextColor3 = Color3.fromRGB(245,245,245)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 13
     btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Text = "  " .. (icon or "") .. "  " .. name
     btn.Parent = Sidebar
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+    addCorner(btn,8)
+    FixText(btn)
 
     local frame = Instance.new("ScrollingFrame", Content)
     frame.Visible = false
@@ -212,14 +233,24 @@ local function CreateCategory(name)
     frame.Position = UDim2.new(0,3,0,3)
     frame.ScrollBarThickness = 6
     frame.BackgroundTransparency = 1
-    local layout = Instance.new("UIListLayout", frame); layout.Padding = UDim.new(0,6)
+    frame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    local layout = Instance.new("UIListLayout", frame); layout.Padding = UDim.new(0,8)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    Pages[name] = {button = btn, frame = frame}
+    local function updateCanvas()
+        task.wait()
+        local s = layout.AbsoluteContentSize.Y + 20
+        pcall(function() frame.CanvasSize = UDim2.new(0,0,0, s) end)
+    end
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+    updateCanvas()
+
+    Pages[name] = {button = btn, frame = frame, layout = layout}
 
     btn.MouseButton1Click:Connect(function()
         if ActivePage then
             ActivePage.button.BackgroundColor3 = currentTheme.accent
-            ActivePage.button.TextColor3 = Color3.new(1,1,1)
+            ActivePage.button.TextColor3 = Color3.fromRGB(245,245,245)
             ActivePage.frame.Visible = false
         end
         ActivePage = Pages[name]
@@ -231,27 +262,27 @@ local function CreateCategory(name)
     return frame
 end
 
--- Helpers: UI widget creators
 local function createTitle(parent, text)
-    local label = Instance.new("TextLabel", parent)
-    label.Size = UDim2.new(1,0,0,22)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 14
-    label.TextColor3 = Color3.fromRGB(230,230,230)
-    label.Text = text
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    return label
+    local t = Instance.new("TextLabel", parent)
+    t.Size = UDim2.new(1,0,0,20)
+    t.BackgroundTransparency = 1
+    t.Font = Enum.Font.GothamBold; t.TextSize = 13
+    t.TextColor3 = Color3.fromRGB(230,230,230)
+    t.Text = text; t.TextXAlignment = Enum.TextXAlignment.Left
+    FixText(t)
+    return t
 end
 
 local function createSmallInput(parent, labelText, initialValue, onSet)
-    local frame = Instance.new("Frame", parent); frame.Size = UDim2.new(1,0,0,48); frame.BackgroundTransparency = 1
-    local label = Instance.new("TextLabel", frame); label.Size = UDim2.new(1,-110,0,18); label.Position = UDim2.new(0,0,0,0)
-    label.BackgroundTransparency = 1; label.Font = Enum.Font.Gotham; label.TextSize = 13; label.TextColor3 = Color3.fromRGB(230,230,230); label.Text = labelText
-    local box = Instance.new("TextBox", frame); box.Size = UDim2.new(0,92,0,30); box.Position = UDim2.new(1,-100,0,18)
-    box.Text = tostring(initialValue); box.ClearTextOnFocus = false; box.Font = Enum.Font.GothamSemibold; box.TextSize = 13; box.TextColor3 = Color3.fromRGB(240,240,240)
-    box.BackgroundColor3 = Color3.fromRGB(28,28,32); Instance.new("UICorner", box).CornerRadius = UDim.new(0,8)
-    box.FocusLost:Connect(function()
+    local frame = Instance.new("Frame", parent); frame.Size = UDim2.new(1,0,0,44); frame.BackgroundTransparency = 1
+    local label = Instance.new("TextLabel", frame); label.Size = UDim2.new(1,-100,0,16); label.Position = UDim2.new(0,0,0,0)
+    label.BackgroundTransparency = 1; label.Font = Enum.Font.Gotham; label.TextSize = 12; label.TextColor3 = Color3.fromRGB(230,230,230); label.Text = labelText
+    FixText(label)
+    local box = Instance.new("TextBox", frame); box.Size = UDim2.new(0,92,0,28); box.Position = UDim2.new(1,-96,0,14)
+    box.Text = tostring(initialValue); box.ClearTextOnFocus = false; box.Font = Enum.Font.GothamSemibold; box.TextSize = 12; box.TextColor3 = Color3.fromRGB(240,240,240)
+    box.BackgroundColor3 = Color3.fromRGB(28,28,32); addCorner(box,8)
+    FixText(box)
+    box.FocusLost:Connect(function(enter)
         local num = tonumber(box.Text)
         if num then onSet(num) else box.Text = tostring(initialValue) end
     end)
@@ -259,15 +290,15 @@ local function createSmallInput(parent, labelText, initialValue, onSet)
 end
 
 local function createToggleButton(parent, labelText, default, callback)
-    local frame = Instance.new("Frame", parent); frame.Size = UDim2.new(1,0,0,38); frame.BackgroundTransparency = 1
+    local frame = Instance.new("Frame", parent); frame.Size = UDim2.new(1,0,0,36); frame.BackgroundTransparency = 1
     local label = Instance.new("TextLabel", frame); label.Size = UDim2.new(1,-70,1,0); label.BackgroundTransparency = 1
-    label.Font = Enum.Font.Gotham; label.TextSize = 13; label.TextXAlignment = Enum.TextXAlignment.Left; label.TextColor3 = Color3.fromRGB(235,235,235)
-    label.Text = labelText
-    local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0,48,0,26); btn.Position = UDim2.new(1,-56,0.5,-13); btn.AutoButtonColor = false
+    label.Font = Enum.Font.Gotham; label.TextSize = 12; label.TextColor3 = Color3.fromRGB(235,235,235); label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Text = labelText; FixText(label)
+    local btn = Instance.new("TextButton", frame); btn.Size = UDim2.new(0,44,0,26); btn.Position = UDim2.new(1,-52,0.5,-13); btn.AutoButtonColor = false
     btn.BackgroundColor3 = default and Color3.fromRGB(50,200,100) or Color3.fromRGB(70,70,75); btn.Text = ""
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,14)
+    addCorner(btn,14)
     local circle = Instance.new("Frame", btn); circle.Size = UDim2.new(0,20,0,20); circle.Position = default and UDim2.new(1,-22,0.5,-10) or UDim2.new(0,2,0.5,-10)
-    circle.BackgroundColor3 = Color3.new(1,1,1); Instance.new("UICorner", circle).CornerRadius = UDim.new(1,0)
+    circle.BackgroundColor3 = Color3.fromRGB(255,255,255); addCorner(circle,20)
     local enabled = default
     btn.MouseButton1Click:Connect(function()
         enabled = not enabled
@@ -275,24 +306,31 @@ local function createToggleButton(parent, labelText, default, callback)
         circle:TweenPosition(enabled and UDim2.new(1,-22,0.5,-10) or UDim2.new(0,2,0.5,-10), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, .15, true)
         callback(enabled)
     end)
+    FixText(btn); FixText(label)
     return frame
 end
 
 local function createScrollList(parent, itemsFunc, selectedTable, highlightColor, height)
-    local container = Instance.new("Frame", parent); container.Size = UDim2.new(1,0,0,height or 140); container.BackgroundTransparency = 1
-    local scroll = Instance.new("ScrollingFrame", container); scroll.Size = UDim2.new(1,0,1,0); scroll.CanvasSize = UDim2.new(0,0,0,0); scroll.BackgroundTransparency = 1; scroll.ScrollBarThickness = 6
+    local h = height or 120
+    local container = Instance.new("Frame", parent); container.Size = UDim2.new(1,0,0,h); container.BackgroundTransparency = 1
+    local scroll = Instance.new("ScrollingFrame", container); scroll.Size = UDim2.new(1,0,1,0); scroll.BackgroundTransparency = 1; scroll.ScrollBarThickness = 6
     local layout = Instance.new("UIListLayout", scroll); layout.Padding = UDim.new(0,6)
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        pcall(function() scroll.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 24) end)
+    end)
     local function refresh()
         for _, v in pairs(scroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
         local items = itemsFunc()
         for _, item in ipairs(items) do
-            local btn = Instance.new("TextButton", scroll)
-            btn.Size = UDim2.new(1,-8,0,34); btn.Position = UDim2.new(0,4,0,0)
+            local btn = Instance.new("TextButton", scroll); btn.Size = UDim2.new(1,-8,0,32); btn.Position = UDim2.new(0,4,0,0)
             btn.BackgroundColor3 = selectedTable[item] and highlightColor or Color3.fromRGB(28,28,32)
             btn.Text = "  • " .. item; btn.Font = Enum.Font.Gotham; btn.TextSize = 13; btn.TextColor3 = Color3.fromRGB(230,230,230); btn.TextXAlignment = Enum.TextXAlignment.Left
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-            local checkFrame = Instance.new("Frame", btn); checkFrame.Size = UDim2.new(0,22,0,22); checkFrame.Position = UDim2.new(1,-30,0.5,-11); checkFrame.BackgroundColor3 = Color3.fromRGB(24,24,26); Instance.new("UICorner", checkFrame).CornerRadius = UDim.new(0,6)
-            local checkLabel = Instance.new("TextLabel", checkFrame); checkLabel.Size = UDim2.new(1,0,1,0); checkLabel.BackgroundTransparency = 1; checkLabel.Text = selectedTable[item] and "✓" or ""; checkLabel.Font = Enum.Font.GothamSemibold; checkLabel.TextColor3 = Color3.fromRGB(230,230,230); checkLabel.TextSize = 14
+            addCorner(btn,8)
+            local checkFrame = Instance.new("Frame", btn); checkFrame.Size = UDim2.new(0,20,0,20); checkFrame.Position = UDim2.new(1,-28,0.5,-10)
+            checkFrame.BackgroundColor3 = Color3.fromRGB(26,26,28); addCorner(checkFrame,6)
+            local checkLabel = Instance.new("TextLabel", checkFrame); checkLabel.Size = UDim2.new(1,0,1,0); checkLabel.BackgroundTransparency = 1; checkLabel.Text = selectedTable[item] and "✓" or ""
+            checkLabel.Font = Enum.Font.GothamSemibold; checkLabel.TextColor3 = Color3.fromRGB(230,230,230); checkLabel.TextSize = 14
+            FixText(btn); FixText(checkLabel)
             btn.MouseButton1Click:Connect(function()
                 selectedTable[item] = not selectedTable[item]
                 btn.BackgroundColor3 = selectedTable[item] and highlightColor or Color3.fromRGB(28,28,32)
@@ -300,31 +338,28 @@ local function createScrollList(parent, itemsFunc, selectedTable, highlightColor
             end)
         end
         task.wait()
-        scroll.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 8)
+        pcall(function() scroll.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 24) end)
     end
     refresh()
     return container, refresh
 end
 
--- Theme buttons creation
 for name, data in pairs(THEMES) do
     local b = Instance.new("TextButton", ThemeContainer)
-    b.Size = UDim2.new(0,14,0,14); b.BackgroundColor3 = data.highlight; b.Text = ""
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
-    b.MouseButton1Click:Connect(function() 
+    b.Size = UDim2.new(0,12,0,12); b.BackgroundColor3 = data.highlight; b.Text = ""
+    addCorner(b,6)
+    b.MouseButton1Click:Connect(function()
         currentTheme = data
-        -- apply
         MainFrame.BackgroundColor3 = data.bg
         TitleBar.BackgroundColor3 = data.accent
         ToggleButton.BackgroundColor3 = data.bg
         ToggleButton.ImageColor3 = data.highlight
         mfStroke.Color = data.accent
-        for _, p in pairs(Pages) do p.button.BackgroundColor3 = data.accent; p.button.TextColor3 = Color3.new(1,1,1) end
+        for _, p in pairs(Pages) do p.button.BackgroundColor3 = data.accent; p.button.TextColor3 = Color3.fromRGB(245,245,245) end
     end)
 end
 
--- Dragging
-local dragging = false; local dragStart, startPos
+local dragging, dragStart, startPos = false, nil, nil
 TitleBar.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = true; dragStart = input.Position; startPos = MainFrame.Position end
 end)
@@ -336,39 +371,37 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Open/close UI
-local tweenOpen = TweenInfo.new(0.25, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
-local tweenClose = TweenInfo.new(0.20, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+local tweenOpen = TweenInfo.new(0.22, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+local tweenClose = TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 local savedPos = MainFrame.Position
 local function ToggleUI()
     if MainFrame.Visible then
         savedPos = MainFrame.Position
-        TweenService:Create(MainFrame, tweenClose, { Size = UDim2.new(0,0,0,0) }):Play()
-        task.wait(0.2)
+        TweenService:Create(MainFrame, tweenClose, {Size = UDim2.new(0,0,0,0)}):Play()
+        task.wait(0.18)
         MainFrame.Visible = false
     else
         MainFrame.Position = savedPos
         MainFrame.Size = UDim2.new(0,0,0,0)
         MainFrame.Visible = true
-        TweenService:Create(MainFrame, tweenOpen, { Size = UDim2.new(0.42,0,0.55,0) }):Play()
+        TweenService:Create(MainFrame, tweenOpen, {Size = UDim2.new(0.36,0,0.50,0)}):Play()
     end
 end
 ToggleButton.MouseButton1Click:Connect(ToggleUI)
 UserInputService.InputBegan:Connect(function(input, gp) if not gp and input.KeyCode == Enum.KeyCode.LeftControl then ToggleUI() end end)
 
---=========================
--- Game-specific refs (adjust names based on game)
---=========================
-local success, beeShopData = pcall(function() return player:WaitForChild("Data"):WaitForChild("BeeShop"):WaitForChild("CurrentStock") end)
-if not success then beeShopData = nil end
-local beesStorage = (ReplicatedStorage:FindFirstChild("Storage") and ReplicatedStorage.Storage:FindFirstChild("Bees")) or nil
-local eggModifiers = (ReplicatedStorage:FindFirstChild("Storage") and ReplicatedStorage.Storage:FindFirstChild("EggModifiers")) or nil
-local plotsFolder = (Workspace:FindFirstChild("Core") and Workspace.Core:FindFirstChild("Scriptable") and Workspace.Core.Scriptable:FindFirstChild("Plots")) or nil
-local idleEvent = (ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("Idle")) or nil
+local function safe(path)
+    local ok, res = pcall(function() return path end)
+    if ok then return res end
+    return nil
+end
 
--- =========================
--- Auto toggles & variables
--- =========================
+local beeShopData = safe(player and player:FindFirstChild("Data") and player.Data:FindFirstChild("BeeShop") and player.Data.BeeShop:FindFirstChild("CurrentStock"))
+local beesStorage = safe(ReplicatedStorage and ReplicatedStorage:FindFirstChild("Storage") and ReplicatedStorage.Storage:FindFirstChild("Bees"))
+local eggModifiers = safe(ReplicatedStorage and ReplicatedStorage:FindFirstChild("Storage") and ReplicatedStorage.Storage:FindFirstChild("EggModifiers"))
+local plotsFolder = safe(Workspace and Workspace:FindFirstChild("Core") and Workspace.Core:FindFirstChild("Scriptable") and Workspace.Core.Scriptable:FindFirstChild("Plots"))
+local idleEvent = safe(ReplicatedStorage and ReplicatedStorage:FindFirstChild("Events") and ReplicatedStorage.Events:FindFirstChild("Idle"))
+
 local autoBuyBeeEnabled, autoBuyEggEnabled, autoGhostEnabled, autoRocketEnabled = false, false, false, false
 local selectedBees, selectedEggNames, selectedEggModifiers = {}, {}, {}
 local ghostKillCount, rocketCollectCount = 0, 0
@@ -378,14 +411,15 @@ local isIdle, idleStartTime, idleConnection, idleCheckThread = false, nil, nil, 
 local currentGhostTarget, currentRocketTarget = nil, nil
 local platform, currentTween = nil, nil
 
--- Left-click AFK default
 local leftClickEnabled = true
-local leftClickInterval = 900 -- seconds (15 minutes default)
+local leftClickInterval = 900
 
--- Formatting helper
+local antiAfkEnabled = true
+local afkWalkDuration, afkWaitDuration = 5, 5
+local jumpInterval = 30000 -- ms
+
 local function formatTime(s) local m = math.floor(s/60) local rs = s%60 return string.format("%02i:%02i", m, rs) end
 
--- Game helpers (attempt to be robust)
 local function getOurPlotNumber()
     if not plotsFolder then return nil end
     for _, plot in pairs(plotsFolder:GetChildren()) do
@@ -420,9 +454,7 @@ end
 local function purchaseBee(slotIndex)
     pcall(function()
         local events = ReplicatedStorage:FindFirstChild("Events")
-        if events and events:FindFirstChild("BeeShopHandler") then
-            events.BeeShopHandler:FireServer("Purchase", {slotIndex = slotIndex, quantity = 1})
-        end
+        if events and events:FindFirstChild("BeeShopHandler") then events.BeeShopHandler:FireServer("Purchase", {slotIndex = slotIndex, quantity = 1}) end
     end)
 end
 
@@ -507,9 +539,8 @@ local function collectRocket(rocket)
     end)
 end
 
--- Platform & movement helpers
 local function createPlatform()
-    if platform then platform:Destroy() end
+    if platform and platform.Parent then platform:Destroy() end
     platform = Instance.new("Part", Workspace)
     platform.Name = "FarmPlatform"
     platform.Size = Vector3.new(6,0.5,6)
@@ -536,9 +567,6 @@ local function tweenToPosition(targetPos)
     return suc
 end
 
--- =========================
--- Auto loops
--- =========================
 local function autoBuyBeeLoop()
     while autoBuyBeeEnabled do
         local stock = checkBeeStock()
@@ -583,12 +611,11 @@ local function autoGhostLoop(statusLabel)
                             if not ghost or not ghost.Parent or not autoGhostEnabled then if followConn then followConn:Disconnect() end return end
                             local char = player.Character; if not char then return end
                             local hrp = char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
-                            local pos = root.Position
-                            hrp.CFrame = CFrame.new(pos)
+                            hrp.CFrame = CFrame.new(root.Position)
                         end)
                         while ghost and ghost.Parent and autoGhostEnabled do
                             attackGhost()
-                            task.wait(0.1)
+                            task.wait(0.08)
                         end
                         if followConn then followConn:Disconnect() end
                     end
@@ -633,13 +660,6 @@ local function autoRocketLoop(statusLabel)
     if statusLabel then statusLabel.Text = "🔴 สถานะ: ปิด" end
 end
 
--- =========================
--- Anti-idle + Left-click AFK
--- =========================
-local antiAfkEnabled = true
-local afkWalkDuration, afkWaitDuration = 5, 5
-local jumpInterval = 30000 -- ms
-
 local function initAntiIdleSystem()
     player.Idled:Connect(function()
         if not isIdle then
@@ -667,7 +687,6 @@ local function initAntiIdleSystem()
 end
 spawn(initAntiIdleSystem)
 
--- small AFK movement
 spawn(function()
     while true do
         if antiAfkEnabled and not autoGhostEnabled and not autoRocketEnabled then
@@ -683,7 +702,6 @@ spawn(function()
     end
 end)
 
--- left-click AFK loop
 spawn(function()
     while true do
         task.wait(math.max(1, leftClickInterval))
@@ -696,128 +714,152 @@ spawn(function()
     end
 end)
 
--- =========================
--- BUILD PAGES & UI CONTENT
--- =========================
--- Create pages
-local page_order = {"Main","🐝 Auto Bee","🥚 Auto Egg","👻 Auto Ghost","🚀 Auto Rocket","Settings"}
-for _, name in ipairs(page_order) do CreateCategory(name) end
+local page_order = {
+    {name="Main", icon="🏠"},
+    {name="Auto Bee", icon="🐝"},
+    {name="Auto Egg", icon="🥚"},
+    {name="Auto Ghost", icon="👻"},
+    {name="Auto Rocket", icon="🚀"},
+    {name="Settings", icon="⚙"}
+}
 
--- Fill Main
-local mainContent = Pages["Main"].frame
-createTitle(mainContent, "Welcome to VeryFun SHOP - Mobile")
-local info = Instance.new("TextLabel", mainContent)
-info.Size = UDim2.new(1,0,0,48)
-info.BackgroundTransparency = 1
-info.Text = "Sidebar เลือกเมนู — ปรับค่าจาก Settings"
-info.Font = Enum.Font.Gotham; info.TextSize = 13; info.TextColor3 = Color3.fromRGB(220,220,220); info.TextWrapped = true
+for _, p in ipairs(page_order) do CreateCategory(p.name, p.icon) end
 
--- Auto Bee content
-local beeContent = Pages["🐝 Auto Bee"].frame
-createTitle(beeContent, "Auto Bee — เลือกผึ้ง")
-local function getBees()
-    local list = {}
-    if beesStorage then
-        for _, b in pairs(beesStorage:GetChildren()) do table.insert(list, b.Name) end
-        table.sort(list)
-    end
-    return list
+local mainFrame = Pages["Main"].frame
+createTitle(mainFrame, "VeryFun SHOP | BeeGarden")
+local info = Instance.new("TextLabel", mainFrame)
+info.Size = UDim2.new(1,0,0,40); info.BackgroundTransparency = 1; info.Font = Enum.Font.Gotham; info.TextSize = 13
+info.TextColor3 = Color3.fromRGB(220,220,220); info.TextWrapped = true
+info.Text = [[
+✨💎 VeryFunSHOP 💎✨
+
+ขอบคุณที่ใช้งานระบบของเรา!  
+ติดปันหาตรงไหนแจ้งผ่านดิสได้เลย
+
+ติดต่อทีมงานผ่าน Discord ได้ที่นี่:
+🔗 https://discord.gg/TSDpFZkKdD
+
+]]
+FixText(info)
+
+
+local beeFrame = Pages["Auto Bee"].frame
+createTitle(beeFrame, "Auto Bee — เลือกผึ้ง")
+local function getAllBeeNames()
+    local t = {}
+    if beesStorage then for _, v in pairs(beesStorage:GetChildren()) do table.insert(t, v.Name) end end
+    table.sort(t); return t
 end
-local beeScroll, refreshBeeList = createScrollList(beeContent, getBees, selectedBees, currentTheme.highlight, 130)
-local beeToggle = Instance.new("TextButton", beeContent)
-beeToggle.Size = UDim2.new(1,0,0,36); beeToggle.Text = "▶ เริ่มซื้อผึ้ง"; beeToggle.Font = Enum.Font.GothamSemibold; beeToggle.TextSize = 14
-beeToggle.TextColor3 = Color3.fromRGB(255,255,255); beeToggle.BackgroundColor3 = currentTheme.highlight; Instance.new("UICorner", beeToggle).CornerRadius = UDim.new(0,8)
-beeToggle.MouseButton1Click:Connect(function()
+local beeScroll, refreshBee = createScrollList(beeFrame, getAllBeeNames, selectedBees, currentTheme.highlight, 120)
+local beeToggleBtn = Instance.new("TextButton", beeFrame)
+beeToggleBtn.Size = UDim2.new(1,0,0,32)
+beeToggleBtn.Font = Enum.Font.GothamSemibold; beeToggleBtn.TextSize = 13; beeToggleBtn.TextColor3 = Color3.new(1,1,1)
+beeToggleBtn.BackgroundColor3 = currentTheme.highlight; beeToggleBtn.Text = "▶ เริ่มซื้อผึ้ง"
+addCorner(beeToggleBtn,8); FixText(beeToggleBtn)
+beeToggleBtn.MouseButton1Click:Connect(function()
     autoBuyBeeEnabled = not autoBuyBeeEnabled
-    beeToggle.Text = autoBuyBeeEnabled and "⏸ หยุดซื้อผึ้ง" or "▶ เริ่มซื้อผึ้ง"
-    beeToggle.BackgroundColor3 = autoBuyBeeEnabled and Color3.fromRGB(220,60,60) or currentTheme.highlight
+    beeToggleBtn.Text = autoBuyBeeEnabled and "⏸ หยุดซื้อผึ้ง" or "▶ เริ่มซื้อผึ้ง"
+    beeToggleBtn.BackgroundColor3 = autoBuyBeeEnabled and Color3.fromRGB(210,60,60) or currentTheme.highlight
     if autoBuyBeeEnabled then spawn(autoBuyBeeLoop) end
 end)
 
--- Auto Egg content
-local eggContent = Pages["🥚 Auto Egg"].frame
-createTitle(eggContent, "Auto Egg — เลือกไข่/บัฟ")
+-- Auto Egg page
+local eggFrame = Pages["Auto Egg"].frame
+createTitle(eggFrame, "Auto Egg — เลือกไข่/บัฟ")
 local function getEggNames()
     return {"Seedling Egg","Leafy Egg","Buzzing Egg","Icey Egg","Blaze Egg","Crystal Egg","Toxic Egg","Prism Egg","Void Egg","Duality Egg","Inspector Egg"}
 end
 local function getEggMods()
-    local mods = {}
-    if eggModifiers then for _, m in pairs(eggModifiers:GetChildren()) do if m:IsA("Folder") then table.insert(mods, m.Name) end end end
-    table.sort(mods)
-    return mods
+    local t = {}
+    if eggModifiers then for _, v in pairs(eggModifiers:GetChildren()) do if v:IsA("Folder") then table.insert(t, v.Name) end end end
+    table.sort(t); return t
 end
-local eggScrollNames, r1 = createScrollList(eggContent, getEggNames, selectedEggNames, currentTheme.highlight, 120)
-local eggScrollMods, r2 = createScrollList(eggContent, getEggMods, selectedEggModifiers, currentTheme.highlight, 120)
-local eggToggle = Instance.new("TextButton", eggContent)
-eggToggle.Size = UDim2.new(1,0,0,36); eggToggle.Text = "▶ เริ่มซื้อไข่"; eggToggle.Font = Enum.Font.GothamSemibold; eggToggle.TextSize = 14
-eggToggle.TextColor3 = Color3.fromRGB(255,255,255); eggToggle.BackgroundColor3 = Color3.fromRGB(255,128,0); Instance.new("UICorner", eggToggle).CornerRadius = UDim.new(0,8)
-eggToggle.MouseButton1Click:Connect(function()
+local eggScrollNames, refreshEggNames = createScrollList(eggFrame, getEggNames, selectedEggNames, currentTheme.highlight, 110)
+local eggScrollMods, refreshEggMods = createScrollList(eggFrame, getEggMods, selectedEggModifiers, currentTheme.highlight, 110)
+local eggToggleBtn = Instance.new("TextButton", eggFrame)
+eggToggleBtn.Size = UDim2.new(1,0,0,32); eggToggleBtn.Font = Enum.Font.GothamSemibold; eggToggleBtn.TextSize = 13
+eggToggleBtn.TextColor3 = Color3.new(1,1,1); eggToggleBtn.BackgroundColor3 = Color3.fromRGB(255,128,0); eggToggleBtn.Text = "▶ เริ่มซื้อไข่"
+addCorner(eggToggleBtn,8); FixText(eggToggleBtn)
+eggToggleBtn.MouseButton1Click:Connect(function()
     autoBuyEggEnabled = not autoBuyEggEnabled
-    eggToggle.Text = autoBuyEggEnabled and "⏸ หยุดซื้อไข่" or "▶ เริ่มซื้อไข่"
-    eggToggle.BackgroundColor3 = autoBuyEggEnabled and Color3.fromRGB(200,50,50) or Color3.fromRGB(255,128,0)
+    eggToggleBtn.Text = autoBuyEggEnabled and "⏸ หยุดซื้อไข่" or "▶ เริ่มซื้อไข่"
+    eggToggleBtn.BackgroundColor3 = autoBuyEggEnabled and Color3.fromRGB(200,50,50) or Color3.fromRGB(255,128,0)
     if autoBuyEggEnabled then spawn(autoBuyEggLoop) end
 end)
 
--- Auto Ghost content
-local ghostContent = Pages["👻 Auto Ghost"].frame
-createTitle(ghostContent, "Auto Ghost — ฟาร์มผี")
-local ghostStatus = Instance.new("TextLabel", ghostContent)
-ghostStatus.Size = UDim2.new(1,0,0,30); ghostStatus.BackgroundColor3 = Color3.fromRGB(36,36,42); ghostStatus.Text = "🔴 สถานะ: ปิด"; ghostStatus.TextColor3 = Color3.fromRGB(255,255,255)
-Instance.new("UICorner", ghostStatus).CornerRadius = UDim.new(0,8)
-local ghostCount = Instance.new("TextLabel", ghostContent); ghostCount.Size = UDim2.new(1,0,0,22); ghostCount.BackgroundTransparency = 1; ghostCount.TextColor3 = Color3.fromRGB(220,220,220)
-spawn(function() while task.wait(0.5) do if ghostCount.Parent then ghostCount.Text = "👻 ตีแล้ว: " .. tostring(ghostKillCount) else break end end end)
-local ghostToggleBtn = Instance.new("TextButton", ghostContent)
-ghostToggleBtn.Size = UDim2.new(1,0,0,36); ghostToggleBtn.Text = "▶ เริ่มฟาร์มผี"; ghostToggleBtn.Font = Enum.Font.GothamSemibold; ghostToggleBtn.TextSize = 14
-ghostToggleBtn.TextColor3 = Color3.fromRGB(255,255,255); ghostToggleBtn.BackgroundColor3 = Color3.fromRGB(120,60,150); Instance.new("UICorner", ghostToggleBtn).CornerRadius = UDim.new(0,8)
-ghostToggleBtn.MouseButton1Click:Connect(function()
+local ghostFrame = Pages["Auto Ghost"].frame
+createTitle(ghostFrame, "Auto Ghost — ฟาร์มผี")
+local ghostStatus = Instance.new("TextLabel", ghostFrame); ghostStatus.Size = UDim2.new(1,0,0,26); ghostStatus.BackgroundColor3 = Color3.fromRGB(36,36,42); ghostStatus.Text = "🔴 สถานะ: ปิด"; ghostStatus.TextColor3 = Color3.fromRGB(255,255,255)
+addCorner(ghostStatus,8); FixText(ghostStatus)
+local ghostCountLbl = Instance.new("TextLabel", ghostFrame); ghostCountLbl.Size = UDim2.new(1,0,0,20); ghostCountLbl.BackgroundTransparency = 1; ghostCountLbl.TextColor3 = Color3.fromRGB(220,220,220)
+FixText(ghostCountLbl)
+spawn(function() while task.wait(0.5) do if ghostCountLbl.Parent then ghostCountLbl.Text = "👻 ตีแล้ว: " .. tostring(ghostKillCount) else break end end end)
+local ghostToggle = Instance.new("TextButton", ghostFrame); ghostToggle.Size = UDim2.new(1,0,0,32); ghostToggle.Font = Enum.Font.GothamSemibold; ghostToggle.TextSize = 13
+ghostToggle.BackgroundColor3 = Color3.fromRGB(120,60,150); ghostToggle.TextColor3 = Color3.new(1,1,1); ghostToggle.Text = "▶ เริ่มฟาร์มผี"
+addCorner(ghostToggle,8); FixText(ghostToggle)
+ghostToggle.MouseButton1Click:Connect(function()
     autoGhostEnabled = not autoGhostEnabled
-    ghostToggleBtn.Text = autoGhostEnabled and "⏸ หยุดฟาร์มผี" or "▶ เริ่มฟาร์มผี"
-    ghostToggleBtn.BackgroundColor3 = autoGhostEnabled and Color3.fromRGB(200,50,50) or Color3.fromRGB(120,60,150)
+    ghostToggle.Text = autoGhostEnabled and "⏸ หยุดฟาร์มผี" or "▶ เริ่มฟาร์มผี"
+    ghostToggle.BackgroundColor3 = autoGhostEnabled and Color3.fromRGB(200,50,50) or Color3.fromRGB(120,60,150)
     if autoGhostEnabled then spawn(function() autoGhostLoop(ghostStatus) end) end
 end)
 
--- Auto Rocket content
-local rocketContent = Pages["🚀 Auto Rocket"].frame
-createTitle(rocketContent, "Auto Rocket — เก็บจรวด")
-local rocketStatus = Instance.new("TextLabel", rocketContent)
-rocketStatus.Size = UDim2.new(1,0,0,30); rocketStatus.BackgroundColor3 = Color3.fromRGB(36,36,42); rocketStatus.Text = "🔴 สถานะ: ปิด"; rocketStatus.TextColor3 = Color3.fromRGB(255,255,255)
-Instance.new("UICorner", rocketStatus).CornerRadius = UDim.new(0,8)
-local rocketCountLbl = Instance.new("TextLabel", rocketContent); rocketCountLbl.Size = UDim2.new(1,0,0,22); rocketCountLbl.BackgroundTransparency = 1; rocketCountLbl.TextColor3 = Color3.fromRGB(220,220,220)
+local rocketFrame = Pages["Auto Rocket"].frame
+createTitle(rocketFrame, "Auto Rocket — เก็บจรวด")
+local rocketStatus = Instance.new("TextLabel", rocketFrame); rocketStatus.Size = UDim2.new(1,0,0,26); rocketStatus.BackgroundColor3 = Color3.fromRGB(36,36,42); rocketStatus.Text = "🔴 สถานะ: ปิด"; rocketStatus.TextColor3 = Color3.fromRGB(255,255,255)
+addCorner(rocketStatus,8); FixText(rocketStatus)
+local rocketCountLbl = Instance.new("TextLabel", rocketFrame); rocketCountLbl.Size = UDim2.new(1,0,0,20); rocketCountLbl.BackgroundTransparency = 1; rocketCountLbl.TextColor3 = Color3.fromRGB(220,220,220)
+FixText(rocketCountLbl)
 spawn(function() while task.wait(0.5) do if rocketCountLbl.Parent then rocketCountLbl.Text = "🚀 เก็บแล้ว: " .. tostring(rocketCollectCount) else break end end end)
-local rocketToggleBtn = Instance.new("TextButton", rocketContent)
-rocketToggleBtn.Size = UDim2.new(1,0,0,36); rocketToggleBtn.Text = "▶ เริ่มเก็บจรวด"; rocketToggleBtn.Font = Enum.Font.GothamSemibold; rocketToggleBtn.TextSize = 14
-rocketToggleBtn.TextColor3 = Color3.fromRGB(255,255,255); rocketToggleBtn.BackgroundColor3 = Color3.fromRGB(50,150,50); Instance.new("UICorner", rocketToggleBtn).CornerRadius = UDim.new(0,8)
-rocketToggleBtn.MouseButton1Click:Connect(function()
+local rocketToggle = Instance.new("TextButton", rocketFrame); rocketToggle.Size = UDim2.new(1,0,0,32); rocketToggle.Font = Enum.Font.GothamSemibold; rocketToggle.TextSize = 13
+rocketToggle.TextColor3 = Color3.new(1,1,1); rocketToggle.BackgroundColor3 = Color3.fromRGB(50,150,50); rocketToggle.Text = "▶ เริ่มเก็บจรวด"
+addCorner(rocketToggle,8); FixText(rocketToggle)
+rocketToggle.MouseButton1Click:Connect(function()
     autoRocketEnabled = not autoRocketEnabled
-    rocketToggleBtn.Text = autoRocketEnabled and "⏸ หยุดเก็บจรวด" or "▶ เริ่มเก็บจรวด"
-    rocketToggleBtn.BackgroundColor3 = autoRocketEnabled and Color3.fromRGB(200,50,50) or Color3.fromRGB(50,150,50)
+    rocketToggle.Text = autoRocketEnabled and "⏸ หยุดเก็บจรวด" or "▶ เริ่มเก็บจรวด"
+    rocketToggle.BackgroundColor3 = autoRocketEnabled and Color3.fromRGB(200,50,50) or Color3.fromRGB(50,150,50)
     if autoRocketEnabled then spawn(function() autoRocketLoop(rocketStatus) end) end
 end)
 
--- Settings content
-local settingsContent = Pages["Settings"].frame
-createTitle(settingsContent, "Settings / System")
-local afkToggle = createToggleButton(settingsContent, "เปิด Anti-AFK", antiAfkEnabled, function(state) antiAfkEnabled = state end)
-createSmallInput(settingsContent, "AFK Walk (วินาที)", afkWalkDuration, function(v) afkWalkDuration = tonumber(v) or afkWalkDuration end)
-createSmallInput(settingsContent, "AFK Wait (วินาที)", afkWaitDuration, function(v) afkWaitDuration = tonumber(v) or afkWaitDuration end)
-createSmallInput(settingsContent, "Jump Interval (ms)", jumpInterval, function(v) jumpInterval = tonumber(v) or jumpInterval end)
-createTitle(settingsContent, "Anti-AFK — Click Left")
-local leftClickToggle = createToggleButton(settingsContent, "คลิกซ้ายทุก X วินาที", leftClickEnabled, function(state) leftClickEnabled = state end)
-createSmallInput(settingsContent, "ตั้งเวลา คลิกซ้าย (วินาที)", leftClickInterval, function(v) leftClickInterval = tonumber(v) or leftClickInterval end)
-createSmallInput(settingsContent, "เฟรมเรท (FPS)", (getgenv and getgenv().Fps) or 120, function(v) applyFPS(v) end)
+local settingsFrame = Pages["Settings"].frame
+createTitle(settingsFrame, "Settings & System")
+local afkToggle = createToggleButton(settingsFrame, "เปิด Anti-AFK", antiAfkEnabled, function(state) antiAfkEnabled = state end)
+createSmallInput(settingsFrame, "AFK Walk (วินาที)", afkWalkDuration, function(v) afkWalkDuration = tonumber(v) or afkWalkDuration end)
+createSmallInput(settingsFrame, "AFK Wait (วินาที)", afkWaitDuration, function(v) afkWaitDuration = tonumber(v) or afkWaitDuration end)
+createSmallInput(settingsFrame, "Jump Interval (ms)", jumpInterval, function(v) jumpInterval = tonumber(v) or jumpInterval end)
 
-local destroyBtn = Instance.new("TextButton", settingsContent)
-destroyBtn.Size = UDim2.new(0,140,0,34); destroyBtn.Text = "Destroy UI"; destroyBtn.Font = Enum.Font.GothamSemibold; destroyBtn.TextSize = 14
-destroyBtn.BackgroundColor3 = currentTheme.accent; destroyBtn.TextColor3 = Color3.new(1,1,1); Instance.new("UICorner", destroyBtn).CornerRadius = UDim.new(0,8)
+createTitle(settingsFrame, "Anti-AFK — Left Click")
+local leftClickToggle = createToggleButton(settingsFrame, "คลิกซ้ายทุก X วินาที", leftClickEnabled, function(state) leftClickEnabled = state end)
+createSmallInput(settingsFrame, "ตั้งเวลา คลิกซ้าย (วินาที)", leftClickInterval, function(v) leftClickInterval = tonumber(v) or leftClickInterval end)
+
+createSmallInput(settingsFrame, "เฟรมเรท (FPS)", 120, function(v) applyFPS(v) end)
+
+local destroyBtn = Instance.new("TextButton", settingsFrame)
+destroyBtn.Size = UDim2.new(0,140,0,30); destroyBtn.Text = "Destroy UI"; destroyBtn.Font = Enum.Font.GothamSemibold; destroyBtn.TextSize = 13
+destroyBtn.BackgroundColor3 = currentTheme.accent; destroyBtn.TextColor3 = Color3.new(1,1,1); addCorner(destroyBtn,8); FixText(destroyBtn)
 destroyBtn.MouseButton1Click:Connect(function()
     autoBuyBeeEnabled = false; autoBuyEggEnabled = false; autoGhostEnabled = false; autoRocketEnabled = false
-    local g = PlayerGui:FindFirstChild(UI_NAME); if g then g:Destroy() end
+    local g = PlayerGui:FindFirstChild(UI_NAME)
+    if g then g:Destroy() end
 end)
 
--- Open first page
 Pages["Main"].button:MouseButton1Click()
 
--- Make UI visible
 MainFrame.Visible = true
 
--- End of file
+for k,v in pairs(Pages) do
+    pcall(function()
+        local frame = v.frame
+        local layout = v.layout or frame:FindFirstChildOfClass("UIListLayout")
+        if layout then
+            layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+                local s = layout.AbsoluteContentSize.Y + 24
+                pcall(function() frame.CanvasSize = UDim2.new(0,0,0,s) end)
+            end)
+            -- initial update
+            task.spawn(function() task.wait(0.05); local s = layout.AbsoluteContentSize.Y + 24; pcall(function() frame.CanvasSize = UDim2.new(0,0,0,s) end) end)
+        end
+    end)
+end
+
+
