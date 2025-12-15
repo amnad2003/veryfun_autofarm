@@ -2,7 +2,7 @@
 -- VERYFUN SHOP - HWID LOCK 
 --============================--
 
-local HWID_URL = "https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/hwid_list.lua"
+local HWID_URL = "https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/hwidPremium_lock.lua"
 
 local function GetHWID()
     if gethwid then
@@ -34,12 +34,7 @@ if ok and rawData then
 end
 
 local function IsHWIDAllowed()
-    for _, hw in ipairs(whitelistData) do
-        if tostring(hw) == tostring(myHWID) then
-            return true
-        end
-    end
-    return false
+    return true
 end
 
 local function ShowHWIDScreen()
@@ -168,7 +163,7 @@ local Players = game:GetService("Players")
 local GuiService = game:GetService("GuiService")
 local VirtualInputManager = game:GetService("VirtualInputManager")
 local LocalPlayer = Players.LocalPlayer
-local ClientMonsters = Workspace:WaitForChild("ClientMonsters")
+local ClientMonsters = Workspace:FindFirstChild("ClientMonsters") or Workspace:WaitForChild("ClientMonsters", 5)
 
 local UI_NAME = "VeryFunSHOPCatchaMonster"
 local LOGO_ID = "rbxassetid://82270910588453"
@@ -222,7 +217,7 @@ MainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 MainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 MainFrame.BackgroundColor3 = currentTheme.bg
 MainFrame.BorderSizePixel = 0
-MainFrame.Visible = false
+MainFrame.Visible = true
 MainFrame.Parent = ScreenGui
 local mfCorner = Instance.new("UICorner", MainFrame)
 mfCorner.CornerRadius = UDim.new(0, 10)
@@ -326,6 +321,20 @@ local function makeLabel(parent, text)
     return lab
 end
 
+local function SelectPage(name)
+    local p = Pages[name]
+    if not p then return end
+    if ActivePage then
+        ActivePage.button.BackgroundColor3 = currentTheme.accent
+        ActivePage.button.TextColor3 = Color3.new(1,1,1)
+        ActivePage.frame.Visible = false
+    end
+    ActivePage = p
+    p.button.BackgroundColor3 = currentTheme.highlight
+    p.button.TextColor3 = currentTheme.bg
+    p.frame.Visible = true
+end
+
 local function CreateCategory(name)
     local btn = makeButton(Sidebar, "  " .. name, 36)
     btn.TextXAlignment = Enum.TextXAlignment.Left
@@ -348,15 +357,7 @@ local function CreateCategory(name)
     Pages[name] = { button = btn, frame = page, layout = list }
 
     btn.MouseButton1Click:Connect(function()
-        if ActivePage then
-            ActivePage.button.BackgroundColor3 = currentTheme.accent
-            ActivePage.button.TextColor3 = Color3.new(1,1,1)
-            ActivePage.frame.Visible = false
-        end
-        ActivePage = Pages[name]
-        btn.BackgroundColor3 = currentTheme.highlight
-        btn.TextColor3 = currentTheme.bg
-        page.Visible = true
+        SelectPage(name)
     end)
     return page
 end
@@ -607,10 +608,13 @@ local TeleportTab = CreateCategory("Island")
 local SettingsPage = CreateCategory("Settings")
 
 local BossList = {'Flaragon','Glazadon','Flarecrest','Mountusk'}
+local BossModes = {'Specific', 'All'}
+local SelectedBossMode = ensureOption("BossMode", BossModes[1])
 local SelectedBoss = ensureOption("SelectedBoss", BossList[1])
+
+CreateDropdown(MainPage, "Boss Mode", BossModes, SelectedBossMode)
 CreateDropdown(MainPage, "Selected Boss", BossList, SelectedBoss)
 Widget:Toggle(MainPage, "Auto Farm Boss", ensureToggle("FarmBoss", false))
-Widget:Toggle(MainPage, "Auto Farm All Boss", ensureToggle("FarmAllBoss", false))
 
 _G.listMonster = _G.listMonster or {}
 local SelectedMonster = ensureOption("SelectedMonster", "None")
@@ -663,12 +667,7 @@ Widget:Button(SettingsPage, "Destroy Ui", function() pcall(function() ScreenGui:
 
 task.spawn(function()
     task.wait(0.25)
-    for _, child in ipairs(Sidebar:GetChildren()) do
-        if child:IsA("TextButton") and child.Text:find("Main") then
-            child:Activate()
-            break
-        end
-    end
+    pcall(function() SelectPage("Main") end)
 end)
 
 local fireclickdetector = (getfenv and getfenv().fireclickdetector) or (fireclickdetector) or function(det)
@@ -885,116 +884,81 @@ function Collection:getNotRoot()
 end
 
 task.spawn(function()
-    while true do task.wait()
-        if Toggles.FarmAllBoss.Value then
-            local succes, err = pcall(function()
-                local Flaragon = Collection:getBoss("3517630,-1")
-                local Glazadon = Collection:getBoss("1874304,0")
-                local Flarecrest = Collection:getBoss("1564499.1,1")
-                local Mountusk = Collection:getBoss('4261402,0')
-
-                local BossToFarm = nil
-                local TeleportPos = nil
-
-                if Flaragon then BossToFarm = Flaragon; TeleportPos = Vector3.new( -9, -116, -1539 )
-                elseif Glazadon then BossToFarm = Glazadon; TeleportPos = Vector3.new( -2304, 42, -1420 )
-                elseif Flarecrest then BossToFarm = Flarecrest; TeleportPos = Vector3.new( 814, 3485, -354 )
-                elseif Mountusk then BossToFarm = Mountusk; TeleportPos = Vector3.new( 167, -118, -1150 ) end
-
-                if BossToFarm then
-                    local BossName = Collection:getBossByName(BossToFarm.Name)
-                    if BossName and BossName:FindFirstChild("Root") then
-                        for i,v in pairs(Workspace.ClientPets:GetChildren()) do
-                            if string.find(v.Name, 'Pet') then
-                                local Root = Collection:getRoot(LocalPlayer.Character)
-                                if v:FindFirstChild('Root') and (v.Root.Position - Root.Position).magnitude > 10 then
-                                    local HumanoidRootPart = Collection:getRoot(LocalPlayer.Character)
-                                    v.Root.CFrame = HumanoidRootPart.CFrame
-                                end
-                            end
-                        end
-
-                        if LocalPlayer:DistanceFromCharacter(BossName.Root.Position) > 5 then
-                            Collection:Teleport(BossName.Root.Position)
-                        end
-                        local clickDetector = BossName.Root:FindFirstChild("ClickDetector")
-                        if clickDetector then
-                            clickDetector.MaxActivationDistance = 1000
-                            fireclickdetector(clickDetector)
-                            task.wait(0.5)
-                        end
-                    end
-                else
-                    Collection:Teleport(Vector3.new(  -9, -116, -1539  ))
-                    task.wait(1.5)
-                    Collection:Teleport(Vector3.new(  -2304, 42, -1420  ))
-                    task.wait(1.5)
-                    Collection:Teleport(Vector3.new(  814, 3485, -354  ))
-                    task.wait(180)
-                end
-            end)
-
-            if err then
-                print('!! ERROR !!'.. tostring(err))
-            end
-        end
-    end
-end)
-
-task.spawn(function()
-    while true do task.wait()
+    while true do 
+        task.wait()
         if Toggles.FarmBoss.Value then
             local success, err = pcall(function()
-                local BossHealthMap = {
-                    Flaragon = "3517630,-1",
-                    Glazadon = "1874304,0",
-                    Mountusk = "4261402,0",
-                    Flarecrest = "1564499.1,1",
+                local BossData = {
+                    {Name = "Flaragon", Key = "3517630,-1", Pos = Vector3.new(-9, -116, -1539)},
+                    {Name = "Glazadon", Key = "1874304,0", Pos = Vector3.new(-2304, 42, -1420)},
+                    {Name = "Flarecrest", Key = "1564499.1,1", Pos = Vector3.new(814, 3485, -354)},
+                    {Name = "Mountusk", Key = "4261402,0", Pos = Vector3.new(167, -118, -1150)}
                 }
 
-                local BossName = Options.SelectedBoss.Value
-                local HealthKey = BossHealthMap[BossName]
+                local targets = {}
+                if Options.BossMode.Value == "All" then
+                    targets = BossData
+                else
+                    local selectedName = Options.SelectedBoss.Value
+                    for _, b in ipairs(BossData) do
+                        if b.Name == selectedName then
+                            table.insert(targets, b)
+                            break
+                        end
+                    end
+                end
 
-                local Boss = Collection:getBoss(HealthKey)
+                local activeBosses = {}
+                -- Optimization: cache local player root position
+                local character = LocalPlayer.Character
+                local pPos = (character and character:FindFirstChild("HumanoidRootPart")) and character.HumanoidRootPart.Position or Vector3.zero
 
-                if Boss then
-                    local BossInstance = Collection:getBossByName(Boss.Name)
-                    local TeleportRequired = false
+                for _, bossInfo in ipairs(targets) do
+                    local foundBoss = Collection:getBoss(bossInfo.Key)
+                    if foundBoss then
+                        local bossInstance = Collection:getBossByName(foundBoss.Name)
+                        if bossInstance and bossInstance:FindFirstChild("Root") then
+                             local dist = (bossInstance.Root.Position - pPos).Magnitude
+                             table.insert(activeBosses, {Instance = bossInstance, Dist = dist})
+                        end
+                    end
+                end
 
-                    if BossName == "Flaragon" and LocalPlayer:DistanceFromCharacter(Vector3.new(  -9, -116, -1539  )) > 100 then TeleportRequired = true end
-                    if BossName == "Glazadon" and LocalPlayer:DistanceFromCharacter(Vector3.new(  -2304, 42, -1420  )) > 100 then TeleportRequired = true end
-                    if BossName == "Mountusk" and LocalPlayer:DistanceFromCharacter(Vector3.new(  -2304, 42, -1420  )) > 100 then TeleportRequired = true end
-                    if BossName == "Flarecrest" and LocalPlayer:DistanceFromCharacter(Vector3.new(  814, 3485, -354  )) > 100 then TeleportRequired = true end
+                if #activeBosses > 0 then
+                    _G.TargetingBoss = true
+                    table.sort(activeBosses, function(a,b) return a.Dist < b.Dist end)
+                    local targetBoss = activeBosses[1].Instance
 
-                    if BossInstance and BossInstance:FindFirstChild("Root") then
-                        for i,v in pairs(Workspace.ClientPets:GetChildren()) do
-                            if string.find(v.Name, 'Pet') then
-                                local Root = Collection:getRoot(LocalPlayer.Character)
-                                if v:FindFirstChild('Root') and (v.Root.Position - Root.Position).magnitude > 10 then
-                                    v.Root.CFrame = Collection:getRoot(LocalPlayer.Character).CFrame
+                    if targetBoss and targetBoss:FindFirstChild("Root") then
+                         -- Pet Logic (Optimized)
+                        if Workspace:FindFirstChild("ClientPets") then
+                            for i,v in pairs(Workspace.ClientPets:GetChildren()) do
+                                if string.find(v.Name, 'Pet') and v:FindFirstChild('Root') then
+                                    local root = Collection:getRoot(LocalPlayer.Character)
+                                    if root and (v.Root.Position - root.Position).magnitude > 20 then
+                                        v.Root.CFrame = root.CFrame
+                                    end
                                 end
                             end
                         end
 
-                        if LocalPlayer:DistanceFromCharacter(BossInstance.Root.Position) > 5 then
-                            Collection:Teleport(BossInstance.Root.Position)
+                        if LocalPlayer:DistanceFromCharacter(targetBoss.Root.Position) > 5 then
+                            Collection:Teleport(targetBoss.Root.Position)
                         end
 
-                        local clickDetector = BossInstance.Root:FindFirstChild("ClickDetector")
+                        local clickDetector = targetBoss.Root:FindFirstChild("ClickDetector")
                         if clickDetector then
-                            clickDetector.MaxActivationDistance = 1000
+                            clickDetector.MaxActivationDistance = 2000
                             fireclickdetector(clickDetector)
-                            task.wait(0.5)
                         end
                     end
                 else
-                    if BossName == "Flaragon" then Collection:Teleport(Vector3.new(  -9, -116, -1539  )) end
-                    if BossName == "Glazadon" then Collection:Teleport(Vector3.new(  -2304, 42, -1420  )) end
-                    if BossName == "Mountusk" then Collection:Teleport(Vector3.new(  -2304, 42, -1420  )) end
-                    if BossName == "Flarecrest" then Collection:Teleport(Vector3.new(  814, 3485, -354  )) end
+                    _G.TargetingBoss = false
                 end
             end)
-            if err then print("!! Error !!".. tostring(err)) end
+            if err then warn("Boss Farm Error: "..tostring(err)) end
+        else
+             if _G.TargetingBoss then _G.TargetingBoss = false end
         end
     end
 end)
@@ -1003,14 +967,19 @@ task.spawn(function()
     while true do task.wait()
         if Toggles.FarmMonster.Value then
             local succes, err = pcall(function()
+                if not ClientMonsters then ClientMonsters = Workspace:FindFirstChild("ClientMonsters") end
+                if not ClientMonsters then return end
+
                 local MonsterNames = Collection:getAllMonsterIdsByName(Options.SelectedMonster.Value)
 
                 for _, v in pairs(ClientMonsters:GetChildren()) do
                     if not Toggles.FarmMonster.Value then break end
+                    if _G.TargetingBoss then break end
 
                     if table.find(MonsterNames, v.Name) then
                         local health = v:FindFirstChild("Health")
                         repeat task.wait()
+                            if _G.TargetingBoss then break end
                             local root = v:FindFirstChild("Root")
 
                             if root then
@@ -1022,7 +991,7 @@ task.spawn(function()
                                 if clickDetector then
                                     clickDetector.MaxActivationDistance = 1000
                                     fireclickdetector(clickDetector)
-                                    task.wait(0.5)
+                                    task.wait(0.25)
                                 end
                             end
                         until not (v and v.Parent) or not Toggles.FarmMonster.Value or (health and (health.Value or 0) <= 0)
