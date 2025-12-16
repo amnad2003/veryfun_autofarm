@@ -1,11 +1,12 @@
 --========================================================--
--- VeryFunSHOP UI HUD |
+-- VeryFunSHOP UI HUD | CLEAN GRID SWITCH VERSION
 --========================================================--
 
 local UIS = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
 
-local UI_NAME = "VeryFunSHOP_UI_FINAL"
+local UI_NAME = "VeryFunSHOP_UI_CLEAN"
 
 pcall(function()
     if CoreGui:FindFirstChild(UI_NAME) then
@@ -14,77 +15,71 @@ pcall(function()
 end)
 
 --================ THEME =================--
-local THEMES = {
-    Mint   = {bg="#0F1720", card="#1F2937", accent="#66FFCC"},
-    Red    = {bg="#120A0A", card="#241111", accent="#FF5C5C"},
-    Blue   = {bg="#071022", card="#0E2438", accent="#7FB3FF"},
-    Pink   = {bg="#140A12", card="#2B1022", accent="#FF7AD9"},
-    Purple = {bg="#0E0A18", card="#1C1333", accent="#B388FF"},
-    Gold   = {bg="#0C0B06", card="#2A260F", accent="#FFC857"}
+local Themes = {
+    Mint   = {bg=Color3.fromRGB(15,23,32), card=Color3.fromRGB(31,41,55), accent=Color3.fromRGB(102,255,204)},
+    Dark   = {bg=Color3.fromRGB(15,15,15), card=Color3.fromRGB(30,30,30), accent=Color3.fromRGB(0,200,255)}
 }
 
-local function C(h) return Color3.fromHex(h) end
-local function Round(o,r)
-    local c = Instance.new("UICorner", o)
-    c.CornerRadius = UDim.new(0,r or 12)
-end
-
---================ LIB =================--
 local Library = {}
 
+--================ CREATE =================--
 function Library:Create(cfg)
     cfg = cfg or {}
-    local Theme = THEMES[cfg.Theme or "Mint"]
+    local theme = Themes[cfg.Theme] or Themes.Mint
 
-    local Gui = Instance.new("ScreenGui")
+    local Gui = Instance.new("ScreenGui", CoreGui)
     Gui.Name = UI_NAME
-    Gui.Parent = CoreGui
     Gui.ResetOnSpawn = false
 
     --================ MAIN =================--
     local Main = Instance.new("Frame", Gui)
-    Main.Size = UDim2.new(0,720,0,480)
+    Main.Size = UDim2.new(0,820,0,520)
     Main.Position = UDim2.new(0.5,0,0.5,0)
     Main.AnchorPoint = Vector2.new(0.5,0.5)
-    Main.BackgroundColor3 = C(Theme.bg)
-    Round(Main,16)
+    Main.BackgroundColor3 = theme.bg
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0,18)
 
-    --================ TITLE =================--
-    local Title = Instance.new("TextLabel", Main)
-    Title.Size = UDim2.new(1,-100,0,46)
-    Title.Position = UDim2.new(0,16,0,0)
+    --================ TOP =================--
+    local Top = Instance.new("Frame", Main)
+    Top.Size = UDim2.new(1,0,0,56)
+    Top.BackgroundColor3 = theme.card
+    Instance.new("UICorner", Top).CornerRadius = UDim.new(0,18)
+
+    local Title = Instance.new("TextLabel", Top)
+    Title.Size = UDim2.new(1,-60,1,0)
+    Title.Position = UDim2.new(0,20,0,0)
     Title.BackgroundTransparency = 1
     Title.TextXAlignment = Enum.TextXAlignment.Left
+    Title.Text = cfg.Title or "VeryFunSHOP UI"
     Title.Font = Enum.Font.GothamBold
     Title.TextSize = 18
     Title.TextColor3 = Color3.new(1,1,1)
-    Title.Text = cfg.Title or "VeryFunSHOP UI"
 
-    --================ CLOSE =================--
-    local Close = Instance.new("TextButton", Main)
+    local Close = Instance.new("TextButton", Top)
     Close.Size = UDim2.new(0,36,0,36)
-    Close.Position = UDim2.new(1,-48,0,6)
+    Close.Position = UDim2.new(1,-46,0.5,-18)
     Close.Text = "✕"
     Close.Font = Enum.Font.GothamBold
     Close.TextSize = 16
-    Close.BackgroundColor3 = C(Theme.card)
+    Close.BackgroundColor3 = Color3.fromRGB(180,60,60)
     Close.TextColor3 = Color3.new(1,1,1)
-    Round(Close,10)
+    Instance.new("UICorner", Close).CornerRadius = UDim.new(0,10)
 
     Close.MouseButton1Click:Connect(function()
-        Gui:Destroy() -- ปิดทิ้ง
+        Gui:Destroy()
     end)
 
-    --================ SIDEBAR =================--
-    local Sidebar = Instance.new("Frame", Main)
-    Sidebar.Size = UDim2.new(0,150,1,-52)
-    Sidebar.Position = UDim2.new(0,0,0,52)
-    Sidebar.BackgroundTransparency = 1
+    --================ TAB BAR =================--
+    local TabBar = Instance.new("Frame", Main)
+    TabBar.Position = UDim2.new(0,20,0,76)
+    TabBar.Size = UDim2.new(1,-40,0,42)
+    TabBar.BackgroundTransparency = 1
 
-    local SideList = Instance.new("UIListLayout", Sidebar)
-    SideList.Padding = UDim.new(0,6)
+    local TabLayout = Instance.new("UIListLayout", TabBar)
+    TabLayout.FillDirection = Enum.FillDirection.Horizontal
+    TabLayout.Padding = UDim.new(0,10)
 
-    --================ PAGES =================--
+    --================ CONTENT =================--
     local Pages = {}
     local Window = {}
 
@@ -100,154 +95,128 @@ function Library:Create(cfg)
         end)
     end
 
-    if cfg.ToggleLogo then
-        local Logo = Instance.new("ImageButton", Gui)
-        Logo.Size = UDim2.new(0,44,0,44)
-        Logo.Position = cfg.TogglePosition or UDim2.new(0,20,0.5,-22)
-        Logo.Image = cfg.ToggleLogo
-        Logo.BackgroundColor3 = C(Theme.card)
-        Round(Logo,12)
-        Logo.MouseButton1Click:Connect(function()
-            Window:Toggle()
-        end)
-    end
-
     --================ TAB =================--
     function Window:Tab(name)
-        local Btn = Instance.new("TextButton", Sidebar)
-        Btn.Size = UDim2.new(1,-10,0,34)
-        Btn.Text = "  "..name
-        Btn.TextXAlignment = Enum.TextXAlignment.Left
-        Btn.Font = Enum.Font.Gotham
-        Btn.TextSize = 14
-        Btn.BackgroundColor3 = C(Theme.card)
-        Btn.TextColor3 = Color3.new(1,1,1)
-        Round(Btn,10)
+        local TabBtn = Instance.new("TextButton", TabBar)
+        TabBtn.Size = UDim2.new(0,120,1,0)
+        TabBtn.Text = name
+        TabBtn.Font = Enum.Font.GothamBold
+        TabBtn.TextSize = 14
+        TabBtn.BackgroundColor3 = theme.card
+        TabBtn.TextColor3 = Color3.new(1,1,1)
+        Instance.new("UICorner", TabBtn).CornerRadius = UDim.new(0,10)
 
         local Page = Instance.new("ScrollingFrame", Main)
-        Page.Position = UDim2.new(0,160,0,52)
-        Page.Size = UDim2.new(1,-170,1,-60)
-        Page.BackgroundTransparency = 1
+        Page.Position = UDim2.new(0,20,0,130)
+        Page.Size = UDim2.new(1,-40,1,-150)
+        Page.CanvasSize = UDim2.new(0,0,0,0)
         Page.ScrollBarThickness = 6
         Page.AutomaticCanvasSize = Enum.AutomaticSize.Y
         Page.Visible = false
+        Page.BackgroundTransparency = 1
 
         local Grid = Instance.new("UIGridLayout", Page)
-        Grid.CellSize = UDim2.new(0,240,0,80)
-        Grid.CellPadding = UDim2.new(0,12,0,12)
+        Grid.CellSize = UDim2.new(0,260,0,120)
+        Grid.CellPadding = UDim2.new(0,14,0,14)
 
-        Btn.MouseButton1Click:Connect(function()
+        TabBtn.MouseButton1Click:Connect(function()
             for _,p in pairs(Pages) do
                 p.page.Visible = false
-                p.btn.BackgroundColor3 = C(Theme.card)
+                p.btn.BackgroundColor3 = theme.card
             end
             Page.Visible = true
-            Btn.BackgroundColor3 = C(Theme.accent)
+            TabBtn.BackgroundColor3 = theme.accent
         end)
 
         if #Pages == 0 then
             Page.Visible = true
-            Btn.BackgroundColor3 = C(Theme.accent)
+            TabBtn.BackgroundColor3 = theme.accent
         end
 
-        table.insert(Pages,{btn=Btn,page=Page})
+        table.insert(Pages,{btn=TabBtn,page=Page})
 
         local Tab = {}
 
-        --========= ELEMENT =========--
+        --================ CARD =================--
+        local function Card(title)
+            local C = Instance.new("Frame", Page)
+            C.BackgroundColor3 = theme.card
+            Instance.new("UICorner", C).CornerRadius = UDim.new(0,14)
 
-        function Tab:Section(text)
-            local L = Instance.new("TextLabel", Page)
-            L.Size = UDim2.new(0,240,0,32)
-            L.BackgroundTransparency = 1
-            L.TextXAlignment = Enum.TextXAlignment.Left
-            L.Text = text
-            L.Font = Enum.Font.GothamBold
-            L.TextSize = 14
-            L.TextColor3 = C(Theme.accent)
+            local T = Instance.new("TextLabel", C)
+            T.Size = UDim2.new(1,-20,0,26)
+            T.Position = UDim2.new(0,10,0,6)
+            T.BackgroundTransparency = 1
+            T.TextXAlignment = Enum.TextXAlignment.Left
+            T.Text = title
+            T.Font = Enum.Font.GothamBold
+            T.TextSize = 14
+            T.TextColor3 = theme.accent
+
+            return C
         end
 
-        function Tab:Button(text,cb)
-            local B = Instance.new("TextButton", Page)
-            B.Text = text
-            B.Font = Enum.Font.Gotham
-            B.TextSize = 14
-            B.BackgroundColor3 = C(Theme.card)
-            B.TextColor3 = Color3.new(1,1,1)
-            Round(B,12)
-            B.MouseButton1Click:Connect(function()
-                if cb then cb() end
-            end)
-        end
-
-        function Tab:Toggle(text,default,cb)
+        --================ TOGGLE SWITCH =================--
+        function Tab:Toggle(title, default, cb)
             local state = default
-            local B = Instance.new("TextButton", Page)
-            B.Font = Enum.Font.Gotham
-            B.TextSize = 14
-            B.BackgroundColor3 = C(Theme.card)
-            B.TextColor3 = Color3.new(1,1,1)
-            Round(B,12)
+            local C = Card(title)
 
-            local function refresh()
-                B.Text = text.." : "..(state and "ON" or "OFF")
-            end
-            refresh()
+            local Switch = Instance.new("TextButton", C)
+            Switch.Size = UDim2.new(0,44,0,22)
+            Switch.Position = UDim2.new(1,-60,0,44)
+            Switch.Text = ""
+            Switch.BackgroundColor3 = state and theme.accent or Color3.fromRGB(80,80,80)
+            Instance.new("UICorner", Switch).CornerRadius = UDim.new(0,11)
 
-            B.MouseButton1Click:Connect(function()
+            Switch.MouseButton1Click:Connect(function()
                 state = not state
-                refresh()
+                Switch.BackgroundColor3 = state and theme.accent or Color3.fromRGB(80,80,80)
                 if cb then cb(state) end
             end)
         end
 
-        function Tab:Slider(text,min,max,default,cb)
-            local val = default or min
-            local B = Instance.new("TextButton", Page)
-            B.Font = Enum.Font.Gotham
-            B.TextSize = 14
-            B.BackgroundColor3 = C(Theme.card)
-            B.TextColor3 = Color3.new(1,1,1)
-            Round(B,12)
+        --================ SLIDER (DRAG + INPUT) =================--
+        function Tab:Slider(title,min,max,default,cb)
+            local value = default or min
+            local C = Card(title)
 
-            local function refresh()
-                B.Text = text.." : "..val
+            local Bar = Instance.new("Frame", C)
+            Bar.Size = UDim2.new(1,-20,0,8)
+            Bar.Position = UDim2.new(0,10,0,60)
+            Bar.BackgroundColor3 = Color3.fromRGB(70,70,70)
+            Instance.new("UICorner", Bar).CornerRadius = UDim.new(0,6)
+
+            local Fill = Instance.new("Frame", Bar)
+            Fill.Size = UDim2.new((value-min)/(max-min),0,1,0)
+            Fill.BackgroundColor3 = theme.accent
+            Instance.new("UICorner", Fill).CornerRadius = UDim.new(0,6)
+
+            local Box = Instance.new("TextBox", C)
+            Box.Size = UDim2.new(0,60,0,24)
+            Box.Position = UDim2.new(1,-80,0,28)
+            Box.Text = tostring(value)
+            Box.Font = Enum.Font.Gotham
+            Box.TextSize = 13
+            Box.BackgroundColor3 = Color3.fromRGB(50,50,50)
+            Box.TextColor3 = Color3.new(1,1,1)
+            Instance.new("UICorner", Box).CornerRadius = UDim.new(0,6)
+
+            local function set(v)
+                value = math.clamp(v,min,max)
+                Box.Text = tostring(value)
+                Fill.Size = UDim2.new((value-min)/(max-min),0,1,0)
+                if cb then cb(value) end
             end
-            refresh()
 
-            B.MouseButton1Click:Connect(function()
-                val += 1
-                if val > max then val = min end
-                refresh()
-                if cb then cb(val) end
+            Bar.InputBegan:Connect(function(i)
+                if i.UserInputType == Enum.UserInputType.MouseButton1 then
+                    local x = (i.Position.X - Bar.AbsolutePosition.X)/Bar.AbsoluteSize.X
+                    set(math.floor(min + (max-min)*x))
+                end
             end)
-        end
 
-        function Tab:Dropdown(text,list,cb)
-            local idx = 1
-            local B = Instance.new("TextButton", Page)
-            B.Font = Enum.Font.Gotham
-            B.TextSize = 14
-            B.BackgroundColor3 = C(Theme.card)
-            B.TextColor3 = Color3.new(1,1,1)
-            Round(B,12)
-
-            local function refresh()
-                B.Text = text.." : "..list[idx]
-            end
-            refresh()
-
-            B.MouseButton1Click:Connect(function()
-                idx += 1
-                if idx > #list then idx = 1 end
-                refresh()
-                if cb then cb(list[idx]) end
-            end)
-        end
-
-        function Tab:Keybind(key,cb)
-            self:Button("Keybind : "..key.Name,function()
-                if cb then cb() end
+            Box.FocusLost:Connect(function()
+                set(tonumber(Box.Text) or value)
             end)
         end
 
