@@ -1,6 +1,5 @@
 --========================================================--
--- VeryFunSHOP UI - FINAL ULTIMATE
--- Stable | Full System | Single File | Ready To Sell
+-- VeryFunSHOP UI - HUD
 --========================================================--
 
 --================ SERVICES =================--
@@ -314,3 +313,4 @@ function Library:Create(cfg)
 end
 
 return Library
+
