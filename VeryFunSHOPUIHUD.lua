@@ -1,7 +1,3 @@
---==================================================
--- VERYFUN UI CORE (PURE UI / SELL VERSION)
---==================================================
-
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -9,6 +5,9 @@ local CoreGui = game:GetService("CoreGui")
 local UI = {}
 UI.__index = UI
 
+--==============================
+-- STATE
+--==============================
 local STATE = {
     Logo = "rbxassetid://82270910588453",
     Title = "VeryFun UI"
@@ -41,12 +40,14 @@ function UI:_init()
         end
     end)
 
-    local gui = Instance.new("ScreenGui", CoreGui)
+    local gui = Instance.new("ScreenGui")
     gui.Name = "VeryFun_UI_Core"
     gui.ResetOnSpawn = false
     gui.IgnoreGuiInset = true
+    gui.Parent = CoreGui
     self.Gui = gui
 
+    --================ MAIN =================
     local main = Instance.new("Frame", gui)
     main.Size = UDim2.fromOffset(640,420)
     main.Position = UDim2.fromScale(0.5,0.5)
@@ -62,7 +63,7 @@ function UI:_init()
     stroke.Thickness = 2
 
     local title = Instance.new("TextLabel", main)
-    title.Size = UDim2.new(1,-24,0,50)
+    title.Size = UDim2.new(1,-24,0,48)
     title.Position = UDim2.fromOffset(12,8)
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBlack
@@ -72,6 +73,20 @@ function UI:_init()
     title.Text = STATE.Title
     self.TitleLabel = title
 
+    local close = Instance.new("TextButton", main)
+    close.Size = UDim2.fromOffset(36,36)
+    close.Position = UDim2.new(1,-44,0,10)
+    close.Text = "✕"
+    close.Font = Enum.Font.GothamBold
+    close.TextSize = 16
+    close.TextColor3 = Color3.new(1,1,1)
+    close.BackgroundColor3 = Color3.fromRGB(50,40,70)
+    Instance.new("UICorner", close).CornerRadius = UDim.new(0,8)
+    close.MouseButton1Click:Connect(function()
+        main.Visible = false
+    end)
+
+    --================ SIDEBAR =================
     local side = Instance.new("ScrollingFrame", main)
     side.Position = UDim2.fromOffset(12,64)
     side.Size = UDim2.new(0,180,1,-76)
@@ -86,6 +101,12 @@ function UI:_init()
         side.CanvasSize = UDim2.new(0,0,0, sl.AbsoluteContentSize.Y + 20)
     end)
 
+    local sp = Instance.new("UIPadding", side)
+    sp.PaddingTop = UDim.new(0,12)
+    sp.PaddingLeft = UDim.new(0,8)
+    sp.PaddingRight = UDim.new(0,8)
+
+    --================ CONTENT =================
     local content = Instance.new("Frame", main)
     content.Position = UDim2.fromOffset(204,64)
     content.Size = UDim2.new(1,-216,1,-76)
@@ -95,15 +116,22 @@ function UI:_init()
     self.Pages = {}
     self.Current = nil
 
+    --================ FLOAT TOGGLE =================
     local tg = Instance.new("ImageButton", gui)
     tg.Size = UDim2.fromOffset(64,64)
     tg.Position = UDim2.new(0,12,0.45,0)
     tg.BackgroundColor3 = Color3.fromRGB(22,18,30)
     tg.Image = STATE.Logo
     Instance.new("UICorner", tg).CornerRadius = UDim.new(0,16)
+
+    local ts = Instance.new("UIStroke", tg)
+    ts.Color = Color3.fromRGB(170,78,255)
+    ts.Thickness = 3
+
     tg.MouseButton1Click:Connect(function()
         main.Visible = not main.Visible
     end)
+
     self.ToggleBtn = tg
 end
 
@@ -117,8 +145,8 @@ function UI:SetLogo(v)
     end
 end
 
-function UI:SetTitle(text)
-    STATE.Title = tostring(text)
+function UI:SetTitle(t)
+    STATE.Title = tostring(t)
     if self.TitleLabel then
         self.TitleLabel.Text = STATE.Title
     end
@@ -127,8 +155,8 @@ end
 function UI:CreatePage(name)
     local page = Instance.new("ScrollingFrame", self.Content)
     page.Size = UDim2.fromScale(1,1)
-    page.ScrollBarThickness = 6
     page.BackgroundTransparency = 1
+    page.ScrollBarThickness = 6
     page.Visible = false
 
     local layout = Instance.new("UIListLayout", page)
@@ -171,8 +199,12 @@ function UI:CreateLabel(p, text)
     l.Text = text
 end
 
+--==============================
+-- TOGGLE
+--==============================
 function UI:CreateToggle(p, text, def, cb)
     local state = def == true
+
     local f = Instance.new("Frame", p)
     f.Size = UDim2.new(1,0,0,36)
     f.BackgroundTransparency = 1
@@ -200,17 +232,22 @@ function UI:CreateToggle(p, text, def, cb)
     Instance.new("UICorner", dot).CornerRadius = UDim.new(0,12)
 
     local function refresh()
-        tw(outer,{BackgroundColor3 = state and Color3.fromRGB(120,80,220) or Color3.fromRGB(70,60,95)})
+        tw(outer,{
+            BackgroundColor3 = state and Color3.fromRGB(120,80,220) or Color3.fromRGB(70,60,95)
+        })
     end
     refresh()
 
     outer.MouseButton1Click:Connect(function()
         state = not state
         refresh()
-        if cb then pcall(cb,state) end
+        if cb then cb(state) end
     end)
 end
 
+--==============================
+-- DROPDOWN (ZINDEX FIX)
+--==============================
 function UI:CreateDropdown(p, text, values, cb)
     local f = Instance.new("Frame", p)
     f.Size = UDim2.new(1,0,0,36)
@@ -233,13 +270,13 @@ function UI:CreateDropdown(p, text, values, cb)
     box.TextSize = 13
     box.TextColor3 = Color3.new(1,1,1)
     box.Text = tostring(values[1] or "Select")
-    Instance.new("UICorner", box).CornerRadius = UDim.new(0,8)
+    Instance.new("UICorner", box)
 
-    local menu = Instance.new("Frame", box)
+    local menu = Instance.new("Frame", self.Gui)
     menu.Visible = false
-    menu.Position = UDim2.new(0,0,1,2)
     menu.BackgroundColor3 = Color3.fromRGB(30,24,44)
-    Instance.new("UICorner", menu).CornerRadius = UDim.new(0,8)
+    menu.ZIndex = 50
+    Instance.new("UICorner", menu)
 
     local layout = Instance.new("UIListLayout", menu)
 
@@ -254,71 +291,107 @@ function UI:CreateDropdown(p, text, values, cb)
             it.BackgroundTransparency = 1
             it.Font = Enum.Font.Gotham
             it.TextColor3 = Color3.fromRGB(235,235,255)
+            it.ZIndex = 51
             it.MouseButton1Click:Connect(function()
                 box.Text = tostring(v)
                 menu.Visible = false
                 if cb then cb(v) end
             end)
         end
-        menu.Size = UDim2.new(1,0,0,#list*28+8)
+        menu.Size = UDim2.new(0,box.AbsoluteSize.X,0,#list*28+8)
     end
 
     rebuild(values)
 
     box.MouseButton1Click:Connect(function()
+        menu.Position = UDim2.fromOffset(
+            box.AbsolutePosition.X,
+            box.AbsolutePosition.Y + box.AbsoluteSize.Y + 2
+        )
         menu.Visible = not menu.Visible
     end)
 end
 
+--==============================
+-- SLIDER (INPUT + NO DRAG BUG)
+--==============================
 function UI:CreateSlider(p, text, min, max, def, cb)
     local f = Instance.new("Frame", p)
     f.Size = UDim2.new(1,0,0,46)
     f.BackgroundTransparency = 1
 
     local lbl = Instance.new("TextLabel", f)
-    lbl.Size = UDim2.new(1,0,0,18)
+    lbl.Size = UDim2.new(0.6,0,0,18)
     lbl.BackgroundTransparency = 1
     lbl.Font = Enum.Font.Gotham
     lbl.TextSize = 13
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextColor3 = Color3.fromRGB(230,230,255)
-    lbl.Text = text.." : "..def
+
+    local input = Instance.new("TextBox", f)
+    input.Size = UDim2.new(0,60,0,18)
+    input.Position = UDim2.new(1,-60,0,0)
+    input.BackgroundColor3 = Color3.fromRGB(45,38,65)
+    input.Font = Enum.Font.Gotham
+    input.TextSize = 13
+    input.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", input)
 
     local bar = Instance.new("Frame", f)
     bar.Size = UDim2.new(1,-40,0,12)
     bar.Position = UDim2.new(0,0,0,26)
     bar.BackgroundColor3 = Color3.fromRGB(60,50,85)
-    Instance.new("UICorner", bar).CornerRadius = UDim.new(0,8)
+    Instance.new("UICorner", bar)
 
     local knob = Instance.new("Frame", bar)
     knob.Size = UDim2.fromOffset(12,12)
     knob.BackgroundColor3 = Color3.fromRGB(200,180,255)
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,6)
+    Instance.new("UICorner", knob)
 
     local dragging = false
+    local main = self.Main
+
     local function set(v)
-        local r = math.clamp((v-min)/(max-min),0,1)
+        v = math.clamp(tonumber(v) or def, min, max)
+        local r = (v-min)/(max-min)
         knob.Position = UDim2.new(r,0,0,0)
         lbl.Text = text.." : "..v
+        input.Text = tostring(v)
         if cb then cb(v) end
     end
     set(def)
 
     knob.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging=true end
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            if main then main.Draggable = false end
+        end
     end)
+
     knob.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging=false end
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+            if main then main.Draggable = true end
+        end
     end)
+
     UserInputService.InputChanged:Connect(function(i)
         if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
             local r = math.clamp((i.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
             set(math.floor(min+(max-min)*r))
         end
     end)
+
+    input.FocusLost:Connect(function(enter)
+        if enter then
+            set(input.Text)
+        end
+    end)
 end
 
+--==============================
+-- EXPORT
+--==============================
 local instance = setmetatable({}, UI)
 instance:_init()
 return instance
-
