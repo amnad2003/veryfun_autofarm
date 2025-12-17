@@ -206,7 +206,7 @@ local player = game.Players.LocalPlayer
 -- =========================
 -- UI Toggle / Slider / Label
 -- =========================
-UI:CreateToggle(FarmPage, "Auto Kill", false, function(state)
+UI:CreateToggle(FarmPage, "Auto Kill + Skill", false, function(state)
     _G.AutoKill = state
 end)
 
@@ -214,7 +214,7 @@ UI:CreateToggle(FarmPage, "Auto Quest", false, function(state)
     _G.AutoQuest = state
 end)
 
-UI:CreateToggle(FarmPage, "Auto Loot", false, function(state)
+UI:CreateToggle(FarmPage, "Auto Loot (ทุกตัว)", false, function(state)
     _G.AutoLoot = state
 end)
 
@@ -246,6 +246,7 @@ if player:FindFirstChild("PlayerScripts") and player.PlayerScripts:FindFirstChil
     player.PlayerScripts.CameraShakeClient.Disabled = true
 end
 
+-- ระบบ AFK (กดเมาส์เสมือนทุก 60 วินาที)
 local vu = game:GetService("VirtualUser")
 player.Idled:Connect(function()
     vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
@@ -254,18 +255,8 @@ player.Idled:Connect(function()
 end)
 
 -- =========================
--- ฟังก์ชันตรวจสอบ Quest ปัจจุบัน
+-- ฟังก์ชันช่วยเหลือ Auto Quest
 -- =========================
-local function GetCurrentQuestMobName()
-    local currentMobName = nil
-    for _, questFrame in pairs(player.PlayerGui.Quests.Window.Grid.ScrollingFrame:GetChildren()) do
-        if questFrame:IsA("Frame") and questFrame:FindFirstChild("MobName") then
-            currentMobName = questFrame.MobName.Text
-        end
-    end
-    return currentMobName
-end
-
 local function CanAcceptQuest()
     local Count = 0
     for _, v in pairs(player.PlayerGui.Quests.Window.Grid.ScrollingFrame:GetChildren()) do
@@ -277,36 +268,41 @@ local function CanAcceptQuest()
 end
 
 -- =========================
--- Auto Kill + Auto Skill + Auto Loot Logic
+-- Auto Kill + Skill + Loot
 -- =========================
 spawn(function()
-    while task.wait() do
+    while task.wait(0.1) do
         pcall(function()
             if _G.AutoKill then
-                local mobName = GetCurrentQuestMobName()
-                if mobName then
-                    for _, mob in pairs(workspace.Mobs:GetChildren()) do
-                        if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 
-                           and mob:FindFirstChild("HumanoidRootPart") 
-                           and mob.Name == mobName then
+                local target
+                for _, mob in pairs(workspace.Mobs:GetChildren()) do
+                    if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0
+                       and mob:FindFirstChild("HumanoidRootPart") then
+                        target = mob
+                        break
+                    end
+                end
 
-                            player.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0,20,0)
+                if target then
+                    -- ใช้ Skill กับ Mob ตัวนี้จนตาย
+                    while target and target.Parent and target.Humanoid.Health > 0 do
+                        for _, skill in pairs(game.ReplicatedStorage.Combat.Skills:GetChildren()) do
+                            task.spawn(function()
+                                game.ReplicatedStorage.Combat.RequestSkillUse:FireServer(skill.Name)
+                            end)
+                        end
 
-                            -- ใช้ Skill อัตโนมัติทุกตัว
-                            for _, skill in pairs(game:GetService("ReplicatedStorage").Combat.Skills:GetChildren()) do
-                                game:GetService("ReplicatedStorage").Combat.RequestSkillUse:FireServer(skill.Name)
-                            end
-
-                            -- เก็บ Loot ถ้าเปิด
-                            if _G.AutoLoot then
-                                for _, loot in pairs(workspace:GetChildren()) do
-                                    if loot.Name == "Loot" and loot:FindFirstChild("CollectLoot") then
+                        -- Auto Loot เร็วสุด
+                        if _G.AutoLoot then
+                            for _, loot in pairs(workspace:GetDescendants()) do
+                                if loot.Name == "Loot" and loot:FindFirstChild("CollectLoot") then
+                                    task.spawn(function()
                                         loot.CollectLoot:FireServer()
-                                    end
+                                    end)
                                 end
                             end
-                            break
                         end
+                        task.wait(0.03)
                     end
                 end
             end
@@ -318,13 +314,16 @@ end)
 -- Auto Quest Logic
 -- =========================
 spawn(function()
-    while task.wait() do
+    while task.wait(0.5) do
         pcall(function()
             if _G.AutoQuest then
                 if CanAcceptQuest() then
-                    player.Character.HumanoidRootPart.CFrame = workspace.Environment.Interactables.Quests.QuestBoard.CFrame
-                    fireproximityprompt(workspace.Environment.Interactables.Quests.QuestBoard.ProximityPrompt)
-                    task.wait(1)
+                    local questBoard = workspace.Environment.Interactables.Quests.QuestBoard
+                    if questBoard and questBoard:FindFirstChild("ProximityPrompt") then
+                        player.Character.HumanoidRootPart.CFrame = questBoard.CFrame
+                        fireproximityprompt(questBoard.ProximityPrompt)
+                        task.wait(1)
+                    end
                 end
             end
         end)
