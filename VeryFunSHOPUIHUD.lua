@@ -1,8 +1,3 @@
---====================================================
--- VeryFun UI CORE (FULL)
--- Pure UI | Customer Build Menu Themselves
---====================================================
-
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -68,7 +63,7 @@ function UI:_init()
     stroke.Thickness = 2
 
     local title = Instance.new("TextLabel", main)
-    title.Size = UDim2.new(1,-140,0,48)
+    title.Size = UDim2.new(1,-24,0,48)
     title.Position = UDim2.fromOffset(12,8)
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBlack
@@ -157,56 +152,6 @@ function UI:SetTitle(t)
     end
 end
 
---==============================
--- TAG (VERSION / STATUS)
---==============================
-function UI:Tag(opt)
-    opt = opt or {}
-
-    if self._Tag then
-        self._Tag:Destroy()
-    end
-
-    local tag = Instance.new("Frame", self.Main)
-    tag.Size = UDim2.fromOffset(90,26)
-    tag.Position = UDim2.new(1,-110,0,14)
-    tag.BackgroundColor3 = opt.Color or Color3.fromRGB(48,255,106)
-    tag.ZIndex = 5
-    Instance.new("UICorner", tag).CornerRadius =
-        UDim.new(0, math.clamp(opt.Radius or 8,0,13))
-
-    local layout = Instance.new("UIListLayout", tag)
-    layout.FillDirection = Enum.FillDirection.Horizontal
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.VerticalAlignment = Enum.VerticalAlignment.Center
-    layout.Padding = UDim.new(0,6)
-
-    local pad = Instance.new("UIPadding", tag)
-    pad.PaddingLeft = UDim.new(0,8)
-    pad.PaddingRight = UDim.new(0,8)
-
-    if opt.Icon then
-        local ic = Instance.new("ImageLabel", tag)
-        ic.Size = UDim2.fromOffset(14,14)
-        ic.BackgroundTransparency = 1
-        ic.Image = icon(opt.Icon)
-        ic.ZIndex = 6
-    end
-
-    local txt = Instance.new("TextLabel", tag)
-    txt.BackgroundTransparency = 1
-    txt.Font = Enum.Font.GothamBold
-    txt.TextSize = 12
-    txt.TextColor3 = Color3.new(0,0,0)
-    txt.Text = tostring(opt.Title or "")
-    txt.ZIndex = 6
-
-    self._Tag = tag
-end
-
---==============================
--- PAGE / LABEL
---==============================
 function UI:CreatePage(name)
     local page = Instance.new("ScrollingFrame", self.Content)
     page.Size = UDim2.fromScale(1,1)
@@ -255,7 +200,7 @@ function UI:CreateLabel(p, text)
 end
 
 --==============================
--- TOGGLE (SWITCH)
+-- TOGGLE
 --==============================
 function UI:CreateToggle(p, text, def, cb)
     local state = def == true
@@ -286,6 +231,7 @@ function UI:CreateToggle(p, text, def, cb)
     dot.BackgroundColor3 = Color3.fromRGB(245,245,245)
     Instance.new("UICorner", dot).CornerRadius = UDim.new(0,12)
 
+    -- ⭐ อัปเดตตำแหน่ง + สี
     local function refresh(instantly)
         if state then
             if instantly then
@@ -311,7 +257,156 @@ function UI:CreateToggle(p, text, def, cb)
     outer.MouseButton1Click:Connect(function()
         state = not state
         refresh(false)
-        if cb then cb(state) end
+        if cb then
+            task.spawn(function()
+                cb(state)
+            end)
+        end
+    end)
+end
+
+
+--==============================
+-- DROPDOWN (ZINDEX FIX)
+--==============================
+function UI:CreateDropdown(p, text, values, cb)
+    local f = Instance.new("Frame", p)
+    f.Size = UDim2.new(1,0,0,36)
+    f.BackgroundTransparency = 1
+
+    local lbl = Instance.new("TextLabel", f)
+    lbl.Size = UDim2.new(0.6,0,1,0)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3 = Color3.fromRGB(230,230,255)
+    lbl.Text = text
+
+    local box = Instance.new("TextButton", f)
+    box.Size = UDim2.fromOffset(180,28)
+    box.Position = UDim2.new(1,-192,0,4)
+    box.BackgroundColor3 = Color3.fromRGB(50,42,70)
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 13
+    box.TextColor3 = Color3.new(1,1,1)
+    box.Text = tostring(values[1] or "Select")
+    Instance.new("UICorner", box)
+
+    local menu = Instance.new("Frame", self.Gui)
+    menu.Visible = false
+    menu.BackgroundColor3 = Color3.fromRGB(30,24,44)
+    menu.ZIndex = 50
+    Instance.new("UICorner", menu)
+
+    local layout = Instance.new("UIListLayout", menu)
+
+    local function rebuild(list)
+        for _,c in pairs(menu:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+        for _,v in ipairs(list) do
+            local it = Instance.new("TextButton", menu)
+            it.Size = UDim2.new(1,-8,0,28)
+            it.Text = tostring(v)
+            it.BackgroundTransparency = 1
+            it.Font = Enum.Font.Gotham
+            it.TextColor3 = Color3.fromRGB(235,235,255)
+            it.ZIndex = 51
+            it.MouseButton1Click:Connect(function()
+                box.Text = tostring(v)
+                menu.Visible = false
+                if cb then cb(v) end
+            end)
+        end
+        menu.Size = UDim2.new(0,box.AbsoluteSize.X,0,#list*28+8)
+    end
+
+    rebuild(values)
+
+    box.MouseButton1Click:Connect(function()
+        menu.Position = UDim2.fromOffset(
+            box.AbsolutePosition.X,
+            box.AbsolutePosition.Y + box.AbsoluteSize.Y + 2
+        )
+        menu.Visible = not menu.Visible
+    end)
+end
+
+--==============================
+-- SLIDER (INPUT + NO DRAG BUG)
+--==============================
+function UI:CreateSlider(p, text, min, max, def, cb)
+    local f = Instance.new("Frame", p)
+    f.Size = UDim2.new(1,0,0,46)
+    f.BackgroundTransparency = 1
+
+    local lbl = Instance.new("TextLabel", f)
+    lbl.Size = UDim2.new(0.6,0,0,18)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3 = Color3.fromRGB(230,230,255)
+
+    local input = Instance.new("TextBox", f)
+    input.Size = UDim2.new(0,60,0,18)
+    input.Position = UDim2.new(1,-60,0,0)
+    input.BackgroundColor3 = Color3.fromRGB(45,38,65)
+    input.Font = Enum.Font.Gotham
+    input.TextSize = 13
+    input.TextColor3 = Color3.new(1,1,1)
+    Instance.new("UICorner", input)
+
+    local bar = Instance.new("Frame", f)
+    bar.Size = UDim2.new(1,-40,0,12)
+    bar.Position = UDim2.new(0,0,0,26)
+    bar.BackgroundColor3 = Color3.fromRGB(60,50,85)
+    Instance.new("UICorner", bar)
+
+    local knob = Instance.new("Frame", bar)
+    knob.Size = UDim2.fromOffset(12,12)
+    knob.BackgroundColor3 = Color3.fromRGB(200,180,255)
+    Instance.new("UICorner", knob)
+
+    local dragging = false
+    local main = self.Main
+
+    local function set(v)
+        v = math.clamp(tonumber(v) or def, min, max)
+        local r = (v-min)/(max-min)
+        knob.Position = UDim2.new(r,0,0,0)
+        lbl.Text = text.." : "..v
+        input.Text = tostring(v)
+        if cb then cb(v) end
+    end
+    set(def)
+
+    knob.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            if main then main.Draggable = false end
+        end
+    end)
+
+    knob.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+            if main then main.Draggable = true end
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(i)
+        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local r = math.clamp((i.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
+            set(math.floor(min+(max-min)*r))
+        end
+    end)
+
+    input.FocusLost:Connect(function(enter)
+        if enter then
+            set(input.Text)
+        end
     end)
 end
 
