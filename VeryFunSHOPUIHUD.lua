@@ -1,18 +1,17 @@
-
+--==================================================
+-- VERYFUN UI CORE (PURE UI / SELL VERSION)
+--==================================================
 
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
---==============================
 local UI = {}
 UI.__index = UI
 
---==============================
--- INTERNAL STATE
---==============================
 local STATE = {
-    Logo = "rbxassetid://82270910588453"
+    Logo = "rbxassetid://82270910588453",
+    Title = "VeryFun UI"
 }
 
 local function tw(obj, props, t)
@@ -33,7 +32,7 @@ local function icon(i)
 end
 
 --==============================
--- INIT UI
+-- INIT
 --==============================
 function UI:_init()
     pcall(function()
@@ -68,23 +67,10 @@ function UI:_init()
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamBlack
     title.TextSize = 18
-    title.TextXAlignment = Left
+    title.TextXAlignment = Enum.TextXAlignment.Left
     title.TextColor3 = Color3.fromRGB(235,210,255)
-    title.Text = "VeryFun UI"
-    self.Title = title
-
-    local close = Instance.new("TextButton", main)
-    close.Size = UDim2.fromOffset(36,36)
-    close.Position = UDim2.new(1,-44,0,10)
-    close.Text = "✕"
-    close.Font = Enum.Font.GothamBold
-    close.TextSize = 16
-    close.TextColor3 = Color3.new(1,1,1)
-    close.BackgroundColor3 = Color3.fromRGB(50,40,70)
-    Instance.new("UICorner", close).CornerRadius = UDim.new(0,8)
-    close.MouseButton1Click:Connect(function()
-        main.Visible = false
-    end)
+    title.Text = STATE.Title
+    self.TitleLabel = title
 
     local side = Instance.new("ScrollingFrame", main)
     side.Position = UDim2.fromOffset(12,64)
@@ -109,22 +95,15 @@ function UI:_init()
     self.Pages = {}
     self.Current = nil
 
-    -- Floating Toggle
     local tg = Instance.new("ImageButton", gui)
     tg.Size = UDim2.fromOffset(64,64)
     tg.Position = UDim2.new(0,12,0.45,0)
     tg.BackgroundColor3 = Color3.fromRGB(22,18,30)
     tg.Image = STATE.Logo
     Instance.new("UICorner", tg).CornerRadius = UDim.new(0,16)
-
-    local ts = Instance.new("UIStroke", tg)
-    ts.Color = Color3.fromRGB(170,78,255)
-    ts.Thickness = 3
-
     tg.MouseButton1Click:Connect(function()
         main.Visible = not main.Visible
     end)
-
     self.ToggleBtn = tg
 end
 
@@ -138,11 +117,18 @@ function UI:SetLogo(v)
     end
 end
 
+function UI:SetTitle(text)
+    STATE.Title = tostring(text)
+    if self.TitleLabel then
+        self.TitleLabel.Text = STATE.Title
+    end
+end
+
 function UI:CreatePage(name)
     local page = Instance.new("ScrollingFrame", self.Content)
     page.Size = UDim2.fromScale(1,1)
-    page.BackgroundTransparency = 1
     page.ScrollBarThickness = 6
+    page.BackgroundTransparency = 1
     page.Visible = false
 
     local layout = Instance.new("UIListLayout", page)
@@ -180,14 +166,13 @@ function UI:CreateLabel(p, text)
     l.BackgroundTransparency = 1
     l.Font = Enum.Font.GothamSemibold
     l.TextSize = 14
-    l.TextXAlignment = Left
+    l.TextXAlignment = Enum.TextXAlignment.Left
     l.TextColor3 = Color3.fromRGB(235,210,255)
     l.Text = text
 end
 
 function UI:CreateToggle(p, text, def, cb)
     local state = def == true
-
     local f = Instance.new("Frame", p)
     f.Size = UDim2.new(1,0,0,36)
     f.BackgroundTransparency = 1
@@ -197,7 +182,7 @@ function UI:CreateToggle(p, text, def, cb)
     lbl.BackgroundTransparency = 1
     lbl.Font = Enum.Font.Gotham
     lbl.TextSize = 14
-    lbl.TextXAlignment = Left
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextColor3 = Color3.fromRGB(235,235,255)
     lbl.Text = text
 
@@ -227,16 +212,113 @@ function UI:CreateToggle(p, text, def, cb)
 end
 
 function UI:CreateDropdown(p, text, values, cb)
-    -- (เหมือนของมึง 1:1 ย่อไว้เพื่อความยาว)
+    local f = Instance.new("Frame", p)
+    f.Size = UDim2.new(1,0,0,36)
+    f.BackgroundTransparency = 1
+
+    local lbl = Instance.new("TextLabel", f)
+    lbl.Size = UDim2.new(0.6,0,1,0)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3 = Color3.fromRGB(230,230,255)
+    lbl.Text = text
+
+    local box = Instance.new("TextButton", f)
+    box.Size = UDim2.fromOffset(180,28)
+    box.Position = UDim2.new(1,-192,0,4)
+    box.BackgroundColor3 = Color3.fromRGB(50,42,70)
+    box.Font = Enum.Font.Gotham
+    box.TextSize = 13
+    box.TextColor3 = Color3.new(1,1,1)
+    box.Text = tostring(values[1] or "Select")
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0,8)
+
+    local menu = Instance.new("Frame", box)
+    menu.Visible = false
+    menu.Position = UDim2.new(0,0,1,2)
+    menu.BackgroundColor3 = Color3.fromRGB(30,24,44)
+    Instance.new("UICorner", menu).CornerRadius = UDim.new(0,8)
+
+    local layout = Instance.new("UIListLayout", menu)
+
+    local function rebuild(list)
+        for _,c in pairs(menu:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+        for _,v in ipairs(list) do
+            local it = Instance.new("TextButton", menu)
+            it.Size = UDim2.new(1,-8,0,28)
+            it.Text = tostring(v)
+            it.BackgroundTransparency = 1
+            it.Font = Enum.Font.Gotham
+            it.TextColor3 = Color3.fromRGB(235,235,255)
+            it.MouseButton1Click:Connect(function()
+                box.Text = tostring(v)
+                menu.Visible = false
+                if cb then cb(v) end
+            end)
+        end
+        menu.Size = UDim2.new(1,0,0,#list*28+8)
+    end
+
+    rebuild(values)
+
+    box.MouseButton1Click:Connect(function()
+        menu.Visible = not menu.Visible
+    end)
 end
 
 function UI:CreateSlider(p, text, min, max, def, cb)
-    -- (เหมือนของมึง 1:1)
+    local f = Instance.new("Frame", p)
+    f.Size = UDim2.new(1,0,0,46)
+    f.BackgroundTransparency = 1
+
+    local lbl = Instance.new("TextLabel", f)
+    lbl.Size = UDim2.new(1,0,0,18)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3 = Color3.fromRGB(230,230,255)
+    lbl.Text = text.." : "..def
+
+    local bar = Instance.new("Frame", f)
+    bar.Size = UDim2.new(1,-40,0,12)
+    bar.Position = UDim2.new(0,0,0,26)
+    bar.BackgroundColor3 = Color3.fromRGB(60,50,85)
+    Instance.new("UICorner", bar).CornerRadius = UDim.new(0,8)
+
+    local knob = Instance.new("Frame", bar)
+    knob.Size = UDim2.fromOffset(12,12)
+    knob.BackgroundColor3 = Color3.fromRGB(200,180,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,6)
+
+    local dragging = false
+    local function set(v)
+        local r = math.clamp((v-min)/(max-min),0,1)
+        knob.Position = UDim2.new(r,0,0,0)
+        lbl.Text = text.." : "..v
+        if cb then cb(v) end
+    end
+    set(def)
+
+    knob.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging=true end
+    end)
+    knob.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging=false end
+    end)
+    UserInputService.InputChanged:Connect(function(i)
+        if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+            local r = math.clamp((i.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
+            set(math.floor(min+(max-min)*r))
+        end
+    end)
 end
 
---==============================
--- EXPORT
---==============================
 local instance = setmetatable({}, UI)
 instance:_init()
 return instance
+
