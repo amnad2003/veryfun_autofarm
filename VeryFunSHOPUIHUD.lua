@@ -1,11 +1,10 @@
 --==================================================
--- VERYFUN UI LIBRARY (SELL VERSION)
+-- VERYFUN UI CORE (PURE / EXTENDABLE)
 --==================================================
 
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
-
+local TweenService = game:GetService("TweenService")
 local Player = Players.LocalPlayer
 local PlayerGui = Player:WaitForChild("PlayerGui")
 
@@ -32,65 +31,71 @@ end
 
 --================ THEME =================--
 local THEME = {
-    bg = Color3.fromHex("#0F1720"),
-    panel = Color3.fromHex("#1F2937"),
-    accent = Color3.fromHex("#66FFCC"),
-    text = Color3.fromRGB(240,240,240)
+    bg = Color3.fromRGB(20,16,28),
+    panel = Color3.fromRGB(28,22,38),
+    accent = Color3.fromRGB(170,78,255),
+    text = Color3.fromRGB(235,210,255)
 }
 
---================ GUI =================--
+--================ CLEAN OLD =================--
 pcall(function()
-    if PlayerGui:FindFirstChild("VeryFun_UI") then
-        PlayerGui.VeryFun_UI:Destroy()
+    if PlayerGui:FindFirstChild("VeryFun_UI_Core") then
+        PlayerGui.VeryFun_UI_Core:Destroy()
     end
 end)
 
+--================ GUI =================--
 local ScreenGui = Instance.new("ScreenGui", PlayerGui)
-ScreenGui.Name = "VeryFun_UI"
+ScreenGui.Name = "VeryFun_UI_Core"
 ScreenGui.ResetOnSpawn = false
 
-local MainFrame = Instance.new("Frame", ScreenGui)
-MainFrame.Size = UDim2.fromOffset(560, 400)
-MainFrame.Position = UDim2.fromScale(0.5,0.5)
-MainFrame.AnchorPoint = Vector2.new(0.5,0.5)
-MainFrame.BackgroundColor3 = THEME.bg
-MainFrame.Active = true
-MainFrame.Draggable = true
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0,14)
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 640, 0, 420)
+Main.Position = UDim2.new(0.5, -320, 0.5, -210)
+Main.BackgroundColor3 = THEME.bg
+Main.Active = true
+Main.Draggable = true
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0,16)
 
--- Top
-local Top = Instance.new("Frame", MainFrame)
-Top.Size = UDim2.new(1,0,0,44)
-Top.BackgroundColor3 = THEME.panel
-Instance.new("UICorner", Top).CornerRadius = UDim.new(0,14)
-
-local Title = Instance.new("TextLabel", Top)
-Title.Size = UDim2.new(1,-60,1,0)
-Title.Position = UDim2.fromOffset(12,0)
+-- Title
+local Title = Instance.new("TextLabel", Main)
+Title.Size = UDim2.new(1,-24,0,48)
+Title.Position = UDim2.new(0,12,0,8)
 Title.BackgroundTransparency = 1
-Title.Text = "VeryFun UI"
 Title.Font = Enum.Font.GothamBold
-Title.TextSize = 16
+Title.TextSize = 18
+Title.Text = "VeryFun UI"
 Title.TextColor3 = THEME.text
 Title.TextXAlignment = Left
 
+-- Sidebar
+local Sidebar = Instance.new("ScrollingFrame", Main)
+Sidebar.Size = UDim2.new(0,180,1,-72)
+Sidebar.Position = UDim2.new(0,12,0,60)
+Sidebar.BackgroundColor3 = THEME.panel
+Sidebar.ScrollBarThickness = 4
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0,12)
+
+local SideLayout = Instance.new("UIListLayout", Sidebar)
+SideLayout.Padding = UDim.new(0,8)
+
 -- Content
-local PageHolder = Instance.new("Frame", MainFrame)
-PageHolder.Position = UDim2.fromOffset(12,56)
-PageHolder.Size = UDim2.new(1,-24,1,-68)
-PageHolder.BackgroundTransparency = 1
+local Content = Instance.new("Frame", Main)
+Content.Size = UDim2.new(1,-216,1,-72)
+Content.Position = UDim2.new(0,204,0,60)
+Content.BackgroundTransparency = 1
 
 local Pages = {}
+local CurrentPage
 
 --================ API =================--
 
 function UI:CreatePage(name)
-    local page = Instance.new("ScrollingFrame", PageHolder)
-    page.Name = name
-    page.Size = UDim2.fromScale(1,1)
-    page.ScrollBarImageTransparency = 1
+    local page = Instance.new("ScrollingFrame", Content)
+    page.Size = UDim2.new(1,0,1,0)
+    page.ScrollBarThickness = 4
     page.CanvasSize = UDim2.new(0,0,0,0)
-    page.Visible = (#Pages == 0)
+    page.Visible = false
 
     local layout = Instance.new("UIListLayout", page)
     layout.Padding = UDim.new(0,10)
@@ -99,19 +104,40 @@ function UI:CreatePage(name)
         page.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 20)
     end)
 
-    Pages[#Pages+1] = page
+    Pages[name] = page
+
+    local btn = Instance.new("TextButton", Sidebar)
+    btn.Size = UDim2.new(1,0,0,40)
+    btn.Text = name
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 15
+    btn.TextColor3 = THEME.text
+    btn.BackgroundColor3 = THEME.panel
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+
+    btn.MouseButton1Click:Connect(function()
+        if CurrentPage then CurrentPage.Visible = false end
+        CurrentPage = page
+        page.Visible = true
+    end)
+
+    if not CurrentPage then
+        CurrentPage = page
+        page.Visible = true
+    end
+
     return page
 end
 
 function UI:CreateSection(page, text)
-    local l = Instance.new("TextLabel", page)
-    l.Size = UDim2.new(1,0,0,26)
-    l.BackgroundTransparency = 1
-    l.Text = text
-    l.Font = Enum.Font.GothamBold
-    l.TextSize = 14
-    l.TextColor3 = THEME.accent
-    l.TextXAlignment = Left
+    local lbl = Instance.new("TextLabel", page)
+    lbl.Size = UDim2.new(1,0,0,26)
+    lbl.BackgroundTransparency = 1
+    lbl.Text = text
+    lbl.Font = Enum.Font.GothamBold
+    lbl.TextSize = 14
+    lbl.TextColor3 = THEME.accent
+    lbl.TextXAlignment = Left
 end
 
 function UI:CreateButton(page, text, callback)
@@ -131,7 +157,6 @@ end
 
 function UI:CreateToggle(page, text, default, callback)
     local state = default or false
-
     local b = Instance.new("TextButton", page)
     b.Size = UDim2.new(1,0,0,34)
     b.Font = Enum.Font.Gotham
@@ -152,15 +177,16 @@ function UI:CreateToggle(page, text, default, callback)
     end)
 end
 
---================ TOGGLE LOGO =================--
+--================ FLOAT TOGGLE =================--
 local ToggleBtn = Instance.new("ImageButton", ScreenGui)
-ToggleBtn.Size = UDim2.fromOffset(52,52)
-ToggleBtn.Position = UDim2.fromOffset(16,200)
-ToggleBtn.BackgroundTransparency = 1
+ToggleBtn.Size = UDim2.new(0,64,0,64)
+ToggleBtn.Position = UDim2.new(0,12,0.45,0)
 ToggleBtn.Image = UI.Config.Logo
+ToggleBtn.BackgroundColor3 = THEME.panel
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(0,16)
 
 ToggleBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
+    Main.Visible = not Main.Visible
 end)
 
 UI.ToggleBtn = ToggleBtn
