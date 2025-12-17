@@ -176,113 +176,137 @@ end
 --============================--
 
 
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-local Window = WindUI:CreateWindow({
-    Title = "My Super Hub",
-    Icon = "door-open", -- lucide icon
-    Author = "by .ftgs and .ftgs",
-    Folder = "MySuperHub",
-})
+-- โหลด UI
+local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/VeryFunSHOPUIHUD.lua"))()
+if not UI then
+    warn("โหลด VeryFunUI ไม่สำเร็จ!")
+    return
+end
 
-local Tab = Window:Tab({
-    Title = "Auto Farm",
-    Icon = "bird", -- optional
-    Locked = false,
-})
-Tab:Select()
+-- ตั้งค่า Logo และ Title
+UI:SetLogo(82270910588453)
+UI:SetTitle("VeryFun SHOP | Premium Hub")
 
+-- =========================
+-- สร้างหน้า Auto Farm
+-- =========================
+local FarmPage = UI:CreatePage("Auto Farm")
 
-local Toggle = Tab:Toggle({
-    Title = "Auto Kill",
-    Desc = "Auto Kill",
-    Icon = "bird",
-    Type = "Checkbox",
-    Value = false, -- default value
-    Callback = function(state) 
-        _G.AutoKill = state
+-- =========================
+-- ตัวแปรควบคุม
+-- =========================
+_G.AutoKill = false
+_G.AutoQuest = false
+_G.AutoLoot = false
+_G.FPS = 60
+_G.FPS_LOCK = false
+
+local player = game.Players.LocalPlayer
+
+-- =========================
+-- UI Toggle / Slider / Label
+-- =========================
+UI:CreateToggle(FarmPage, "Auto Kill", false, function(state)
+    _G.AutoKill = state
+end)
+
+UI:CreateToggle(FarmPage, "Auto Quest", false, function(state)
+    _G.AutoQuest = state
+end)
+
+UI:CreateToggle(FarmPage, "Auto Loot", false, function(state)
+    _G.AutoLoot = state
+end)
+
+UI:CreateLabel(FarmPage, "⚙ FPS")
+UI:CreateSlider(FarmPage, "FPS", 5, 240, _G.FPS, function(v)
+    _G.FPS = v
+    if _G.FPS_LOCK and setfpscap then
+        setfpscap(v)
     end
-})
+end)
 
-local Toggle = Tab:Toggle({
-    Title = "Auto Quest",
-    Desc = "Auto Quest",
-    Icon = "bird",
-    Type = "Checkbox",
-    Value = false, -- default value
-    Callback = function(state) 
-        _G.AutoQuest = state
+UI:CreateToggle(FarmPage, "Enable FPS Lock", false, function(v)
+    _G.FPS_LOCK = v
+    if setfpscap then
+        setfpscap(v and _G.FPS or 999)
     end
-})
-local Input = Tab:Input({
-    Title = "FPS LOCK",
-    Desc = "FPS LOCK",
-    Value = "240",
-    InputIcon = "bird",
-    Type = "Input", -- or "Textarea"
-    Placeholder = "Enter Number...",
-    Callback = function(input) 
-        setfpscap(tonumber(input))
-    end
-})
---
+end)
+
+-- =========================
+-- ป้องกัน Skill Spawn / Camera Shake / AFK
+-- =========================
 workspace.ChildAdded:Connect(function(a)
     if a.Name == "Skill" then
         a:Destroy()
     end
 end)
 
-
-game:GetService("Players").LocalPlayer.PlayerScripts.CameraShakeClient.Disabled = true
+if player:FindFirstChild("PlayerScripts") and player.PlayerScripts:FindFirstChild("CameraShakeClient") then
+    player.PlayerScripts.CameraShakeClient.Disabled = true
+end
 
 local vu = game:GetService("VirtualUser")
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-
 player.Idled:Connect(function()
-    vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
     task.wait(1)
-    vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
 end)
 
+-- =========================
+-- ฟังก์ชันตรวจสอบ Quest ปัจจุบัน
+-- =========================
+local function GetCurrentQuestMobName()
+    local currentMobName = nil
+    for _, questFrame in pairs(player.PlayerGui.Quests.Window.Grid.ScrollingFrame:GetChildren()) do
+        if questFrame:IsA("Frame") and questFrame:FindFirstChild("MobName") then
+            currentMobName = questFrame.MobName.Text
+        end
+    end
+    return currentMobName
+end
+
+local function CanAcceptQuest()
+    local Count = 0
+    for _, v in pairs(player.PlayerGui.Quests.Window.Grid.ScrollingFrame:GetChildren()) do
+        if v:IsA("Frame") and not (v:FindFirstChild("Completed") and v.Completed.Value) then
+            Count = Count + 1
+        end
+    end
+    return Count < 5
+end
+
+-- =========================
+-- Auto Kill + Auto Skill + Auto Loot Logic
+-- =========================
 spawn(function()
     while task.wait() do
         pcall(function()
             if _G.AutoKill then
-                for i,v in pairs(workspace.Mobs:GetChildren()) do
-                    if v:FindFirstChild("Humanoid") and v:FindFirstChild("Humanoid").Health > 0 and v:FindFirstChild("HumanoidRootPart") then
-                        v.HumanoidRootPart.CanCollide = true
-                        v.HumanoidRootPart.Size = Vector3.new(0, 0, 0)
+                local mobName = GetCurrentQuestMobName()
+                if mobName then
+                    for _, mob in pairs(workspace.Mobs:GetChildren()) do
+                        if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 
+                           and mob:FindFirstChild("HumanoidRootPart") 
+                           and mob.Name == mobName then
 
-                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0,20,0)
-                        --
-                        for i,v in pairs(workspace:GetChildren()) do
-                            if v.Name == "Loot" then
-                                if v:FindFirstChild("CollectLoot") then
-                                    v.CollectLoot:FireServer()
+                            player.Character.HumanoidRootPart.CFrame = mob.HumanoidRootPart.CFrame * CFrame.new(0,20,0)
+
+                            -- ใช้ Skill อัตโนมัติทุกตัว
+                            for _, skill in pairs(game:GetService("ReplicatedStorage").Combat.Skills:GetChildren()) do
+                                game:GetService("ReplicatedStorage").Combat.RequestSkillUse:FireServer(skill.Name)
+                            end
+
+                            -- เก็บ Loot ถ้าเปิด
+                            if _G.AutoLoot then
+                                for _, loot in pairs(workspace:GetChildren()) do
+                                    if loot.Name == "Loot" and loot:FindFirstChild("CollectLoot") then
+                                        loot.CollectLoot:FireServer()
+                                    end
                                 end
                             end
+                            break
                         end
-                        for i,v in pairs(game:GetService("ReplicatedStorage").Combat.Skills:GetChildren()) do
-                            local args = {
-                                v.Name
-                            }
-                            game:GetService("ReplicatedStorage"):WaitForChild("Combat"):WaitForChild("RequestSkillUse"):FireServer(unpack(args))
-                        end
-                        -- task.spawn(function()
-                        --     for i,vv in pairs(workspace.Mobs:GetChildren()) do
-                        --         if vv:FindFirstChild("Humanoid") and vv:FindFirstChild("Humanoid").Health > 0 and vv.Name == v.Name and vv:FindFirstChild("HumanoidRootPart") then
-                        --             vv.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame
-                        --             vv.HumanoidRootPart.CanCollide = true
-                        --             vv.HumanoidRootPart.Size = Vector3.new(0, 0, 0)
-                        --         end
-                        --     end
-                        --     if sethiddenproperty then
-                        --         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 112412400000)
-                        --         sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", 112412400000)
-                        --     end
-                        -- end)
-
-                        break
                     end
                 end
             end
@@ -290,31 +314,26 @@ spawn(function()
     end
 end)
 
-
--- AUTO QUEST
-
-function CheckQuest()
-    Count = 0
-    for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui.Quests.Window.Grid.ScrollingFrame:GetChildren()) do
-        if v:IsA"Frame" then
-            Count = Count  +1
-        end
-    end
-    return Count
-end
-
-
+-- =========================
+-- Auto Quest Logic
+-- =========================
 spawn(function()
     while task.wait() do
         pcall(function()
             if _G.AutoQuest then
-                if CheckQuest() <= 5 then
-                    --
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = workspace.Environment.Interactables.Quests.QuestBoard.CFrame
+                if CanAcceptQuest() then
+                    player.Character.HumanoidRootPart.CFrame = workspace.Environment.Interactables.Quests.QuestBoard.CFrame
                     fireproximityprompt(workspace.Environment.Interactables.Quests.QuestBoard.ProximityPrompt)
-                    --
+                    task.wait(1)
                 end
             end
         end)
     end
 end)
+
+-- =========================
+-- ตั้งค่า FPS เริ่มต้น
+-- =========================
+if setfpscap then
+    setfpscap(_G.FPS_LOCK and _G.FPS or 999)
+end
