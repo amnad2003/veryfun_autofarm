@@ -176,187 +176,145 @@ end
 --============================--
 
 
-if not game:IsLoaded() then game.Loaded:Wait() end
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local Window = WindUI:CreateWindow({
+    Title = "My Super Hub",
+    Icon = "door-open", -- lucide icon
+    Author = "by .ftgs and .ftgs",
+    Folder = "MySuperHub",
+})
 
---================ LOAD UI ==========================
-local UI = loadstring(game:HttpGet(
-    "https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/VeryFunSHOPUIHUD.lua"
-))()
+local Tab = Window:Tab({
+    Title = "Auto Farm",
+    Icon = "bird", -- optional
+    Locked = false,
+})
+Tab:Select()
 
-UI:SetLogo(82270910588453)
-UI:SetTitle("VeryFun SHOP | MOUNTRNG  v1.0.0")
 
---================ SERVICES =========================
+local Toggle = Tab:Toggle({
+    Title = "Auto Kill",
+    Desc = "Auto Kill",
+    Icon = "bird",
+    Type = "Checkbox",
+    Value = false, -- default value
+    Callback = function(state) 
+        _G.AutoKill = state
+    end
+})
+
+local Toggle = Tab:Toggle({
+    Title = "Auto Quest",
+    Desc = "Auto Quest",
+    Icon = "bird",
+    Type = "Checkbox",
+    Value = false, -- default value
+    Callback = function(state) 
+        _G.AutoQuest = state
+    end
+})
+local Input = Tab:Input({
+    Title = "FPS LOCK",
+    Desc = "FPS LOCK",
+    Value = "240",
+    InputIcon = "bird",
+    Type = "Input", -- or "Textarea"
+    Placeholder = "Enter Number...",
+    Callback = function(input) 
+        setfpscap(tonumber(input))
+    end
+})
+--
+workspace.ChildAdded:Connect(function(a)
+    if a.Name == "Skill" then
+        a:Destroy()
+    end
+end)
+
+
+game:GetService("Players").LocalPlayer.PlayerScripts.CameraShakeClient.Disabled = true
+
+local vu = game:GetService("VirtualUser")
 local Players = game:GetService("Players")
-local RS      = game:GetService("ReplicatedStorage")
-local UIS     = game:GetService("UserInputService")
-local vu      = game:GetService("VirtualUser")
+local player = Players.LocalPlayer
 
-local player  = Players.LocalPlayer
-
---================ GLOBAL FLAGS =====================
-_G.AutoKill   = false
-_G.AutoQuest  = false
-
---==================================================
--- PAGE : AUTO FARM
---==================================================
-local Farm = UI:CreatePage("Auto Farm")
-
-UI:CreateLabel(Farm,"⚔ Auto Farm System")
-
-UI:CreateToggle(Farm,"Auto Kill",false,function(v)
-    _G.AutoKill = v
+player.Idled:Connect(function()
+    vu:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    vu:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
 end)
 
-UI:CreateToggle(Farm,"Auto Quest",false,function(v)
-    _G.AutoQuest = v
-end)
-
---================ FPS LOCK (SLIDER) =================
-UI:CreateSlider(
-    Farm,
-    "FPS LOCK (Slider)",
-    30,     -- min
-    360,    -- max
-    240,    -- default
-    function(fps)
-        if setfpscap then
-            setfpscap(fps)
-        elseif set_fps_cap then
-            set_fps_cap(fps)
-        end
-    end
-)
-
---================ FPS LOCK (INPUT) ==================
-UI:CreateInput(Farm,"FPS LOCK (Input)","240",function(input)
-    local fps = tonumber(input)
-    if not fps then return end
-
-    if setfpscap then
-        setfpscap(fps)
-    elseif set_fps_cap then
-        set_fps_cap(fps)
-    else
-        warn("[VeryFun] Executor ไม่รองรับ FPS Cap")
-    end
-end)
-
---==================================================
--- BLOCK SKILL EFFECT
---==================================================
-workspace.ChildAdded:Connect(function(obj)
-    if obj.Name == "Skill" then
+spawn(function()
+    while task.wait() do
         pcall(function()
-            obj:Destroy()
+            if _G.AutoKill then
+                for i,v in pairs(workspace.Mobs:GetChildren()) do
+                    if v:FindFirstChild("Humanoid") and v:FindFirstChild("Humanoid").Health > 0 and v:FindFirstChild("HumanoidRootPart") then
+                        v.HumanoidRootPart.CanCollide = true
+                        v.HumanoidRootPart.Size = Vector3.new(0, 0, 0)
+
+                        game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame * CFrame.new(0,20,0)
+                        --
+                        for i,v in pairs(workspace:GetChildren()) do
+                            if v.Name == "Loot" then
+                                if v:FindFirstChild("CollectLoot") then
+                                    v.CollectLoot:FireServer()
+                                end
+                            end
+                        end
+                        for i,v in pairs(game:GetService("ReplicatedStorage").Combat.Skills:GetChildren()) do
+                            local args = {
+                                v.Name
+                            }
+                            game:GetService("ReplicatedStorage"):WaitForChild("Combat"):WaitForChild("RequestSkillUse"):FireServer(unpack(args))
+                        end
+                        -- task.spawn(function()
+                        --     for i,vv in pairs(workspace.Mobs:GetChildren()) do
+                        --         if vv:FindFirstChild("Humanoid") and vv:FindFirstChild("Humanoid").Health > 0 and vv.Name == v.Name and vv:FindFirstChild("HumanoidRootPart") then
+                        --             vv.HumanoidRootPart.CFrame = v.HumanoidRootPart.CFrame
+                        --             vv.HumanoidRootPart.CanCollide = true
+                        --             vv.HumanoidRootPart.Size = Vector3.new(0, 0, 0)
+                        --         end
+                        --     end
+                        --     if sethiddenproperty then
+                        --         sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", 112412400000)
+                        --         sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", 112412400000)
+                        --     end
+                        -- end)
+
+                        break
+                    end
+                end
+            end
         end)
     end
 end)
 
---==================================================
--- DISABLE CAMERA SHAKE
---==================================================
-pcall(function()
-    player.PlayerScripts.CameraShakeClient.Disabled = true
-end)
 
---==================================================
--- ANTI AFK
---==================================================
-player.Idled:Connect(function()
-    vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)
+-- AUTO QUEST
 
---==================================================
--- AUTO KILL SYSTEM (SAFE)
---==================================================
-task.spawn(function()
-    while task.wait(0.1) do
-        if not _G.AutoKill then continue end
-
-        local mobs = workspace:FindFirstChild("Mobs")
-        if not mobs then continue end
-
-        for _,mob in pairs(mobs:GetChildren()) do
-            local hum = mob:FindFirstChildOfClass("Humanoid")
-            local hrp = mob:FindFirstChild("HumanoidRootPart")
-
-            if hum and hrp and hum.Health > 0 then
-                -- Hitbox
-                hrp.Size = Vector3.new(0,0,0)
-                hrp.CanCollide = false
-
-                -- Teleport
-                if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                    player.Character.HumanoidRootPart.CFrame =
-                        hrp.CFrame * CFrame.new(0,20,0)
-                end
-
-                -- Use Skills
-                local combat = RS:FindFirstChild("Combat")
-                if combat and combat:FindFirstChild("Skills") then
-                    for _,skill in pairs(combat.Skills:GetChildren()) do
-                        combat.RequestSkillUse:FireServer(skill.Name)
-                    end
-                end
-
-                -- Collect Loot
-                for _,l in pairs(workspace:GetChildren()) do
-                    if l.Name == "Loot" and l:FindFirstChild("CollectLoot") then
-                        l.CollectLoot:FireServer()
-                    end
-                end
-
-                break
-            end
+function CheckQuest()
+    Count = 0
+    for i,v in pairs(game:GetService("Players").LocalPlayer.PlayerGui.Quests.Window.Grid.ScrollingFrame:GetChildren()) do
+        if v:IsA"Frame" then
+            Count = Count  +1
         end
     end
-end)
-
---==================================================
--- AUTO QUEST SYSTEM (SAFE)
---==================================================
-local function CheckQuest()
-    local gui = player.PlayerGui:FindFirstChild("Quests")
-    if not gui then return 999 end
-
-    local count = 0
-    for _,v in pairs(
-        gui.Window.Grid.ScrollingFrame:GetChildren()
-    ) do
-        if v:IsA("Frame") then
-            count += 1
-        end
-    end
-    return count
+    return Count
 end
 
-task.spawn(function()
-    while task.wait(1) do
-        if not _G.AutoQuest then continue end
 
-        if CheckQuest() <= 5 then
-            local board =
-                workspace:FindFirstChild("Environment")
-                and workspace.Environment:FindFirstChild("Interactables")
-                and workspace.Environment.Interactables:FindFirstChild("Quests")
-                and workspace.Environment.Interactables.Quests:FindFirstChild("QuestBoard")
-
-            if board
-            and board:FindFirstChild("ProximityPrompt")
-            and player.Character
-            and player.Character:FindFirstChild("HumanoidRootPart") then
-
-                player.Character.HumanoidRootPart.CFrame = board.CFrame
-                fireproximityprompt(board.ProximityPrompt)
+spawn(function()
+    while task.wait() do
+        pcall(function()
+            if _G.AutoQuest then
+                if CheckQuest() <= 5 then
+                    --
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = workspace.Environment.Interactables.Quests.QuestBoard.CFrame
+                    fireproximityprompt(workspace.Environment.Interactables.Quests.QuestBoard.ProximityPrompt)
+                    --
+                end
             end
-        end
+        end)
     end
 end)
-
---==================================================
--- END | VERYFUN SHOP
---==================================================
