@@ -1,3 +1,4 @@
+--01
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
@@ -223,27 +224,48 @@ function UI:CreateToggle(p, text, def, cb)
     outer.Position = UDim2.new(1,-68,0,4)
     outer.BackgroundColor3 = Color3.fromRGB(70,60,95)
     outer.Text = ""
+    outer.AutoButtonColor = false
     Instance.new("UICorner", outer).CornerRadius = UDim.new(0,14)
 
     local dot = Instance.new("Frame", outer)
     dot.Size = UDim2.fromOffset(24,24)
-    dot.Position = UDim2.fromOffset(2,2)
     dot.BackgroundColor3 = Color3.fromRGB(245,245,245)
     Instance.new("UICorner", dot).CornerRadius = UDim.new(0,12)
 
-    local function refresh()
-        tw(outer,{
-            BackgroundColor3 = state and Color3.fromRGB(120,80,220) or Color3.fromRGB(70,60,95)
-        })
+    -- ⭐ อัปเดตตำแหน่ง + สี
+    local function refresh(instantly)
+        if state then
+            if instantly then
+                outer.BackgroundColor3 = Color3.fromRGB(120,80,220)
+                dot.Position = UDim2.new(1,-26,0,2)
+            else
+                tw(outer,{BackgroundColor3 = Color3.fromRGB(120,80,220)})
+                tw(dot,{Position = UDim2.new(1,-26,0,2)})
+            end
+        else
+            if instantly then
+                outer.BackgroundColor3 = Color3.fromRGB(70,60,95)
+                dot.Position = UDim2.new(0,2,0,2)
+            else
+                tw(outer,{BackgroundColor3 = Color3.fromRGB(70,60,95)})
+                tw(dot,{Position = UDim2.new(0,2,0,2)})
+            end
+        end
     end
-    refresh()
+
+    refresh(true)
 
     outer.MouseButton1Click:Connect(function()
         state = not state
-        refresh()
-        if cb then cb(state) end
+        refresh(false)
+        if cb then
+            task.spawn(function()
+                cb(state)
+            end)
+        end
     end)
 end
+
 
 --==============================
 -- DROPDOWN (ZINDEX FIX)
