@@ -176,163 +176,194 @@ end
 --============================--
 
 
--- โหลด UI
-local UI = loadstring(game:HttpGet("https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/VeryFunSHOPUIHUD.lua"))()
-if not UI then
-    warn("โหลด VeryFunUI ไม่สำเร็จ!")
-    return
-end
+--=====================================================
+-- VERYFUN SHOP | AUTO FARM (BEST + ORIGINAL SKILL)
+-- Hover Head | Safe Loop | Use ALL Skills (OLD STYLE)
+--=====================================================
 
--- ตั้งค่า Logo และ Title
+--================= LOAD UI =================--
+local UI = loadstring(game:HttpGet(
+    "https://raw.githubusercontent.com/amnad2003/veryfun_autofarm/refs/heads/main/VeryFunSHOPUIHUD.lua"
+))()
+if not UI then return end
+
 UI:SetLogo(82270910588453)
-UI:SetTitle("VeryFun SHOP | Premium Hub")
+UI:SetTitle("VeryFun SHOP | Premium Hub (BEST)")
 
--- =========================
--- สร้างหน้า Auto Farm
--- =========================
-local FarmPage = UI:CreatePage("Auto Farm")
+--================= SERVICES =================--
+local Players = game:GetService("Players")
+local RS      = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local VirtualUser = game:GetService("VirtualUser")
 
--- =========================
--- ตัวแปรควบคุม
--- =========================
-_G.AutoKill = false
-_G.AutoQuest = false
-_G.AutoLoot = false
-_G.FPS = 60
-_G.FPS_LOCK = false
+local player = Players.LocalPlayer
 
-local player = game.Players.LocalPlayer
+--================= STATE =================--
+_G.AutoKill    = false
+_G.AutoLoot    = false
+_G.AutoQuest   = false
+_G.HoverHeight = 6
+_G.FPS         = 60
+_G.FPS_LOCK    = false
 
--- =========================
--- UI Toggle / Slider / Label
--- =========================
-UI:CreateToggle(FarmPage, "Auto Kill + Skill", false, function(state)
-    _G.AutoKill = state
+--================= PAGE =================--
+local Farm = UI:CreatePage("Auto Farm")
+
+UI:CreateToggle(Farm,"Auto Kill (Hover Head)",false,function(v)
+    _G.AutoKill = v
 end)
 
-UI:CreateToggle(FarmPage, "Auto Quest", false, function(state)
-    _G.AutoQuest = state
+UI:CreateSlider(Farm,"Hover Height",3,15,_G.HoverHeight,function(v)
+    _G.HoverHeight = v
 end)
 
-UI:CreateToggle(FarmPage, "Auto Loot (ทุกตัว)", false, function(state)
-    _G.AutoLoot = state
+UI:CreateToggle(Farm,"Auto Loot",false,function(v)
+    _G.AutoLoot = v
 end)
 
-UI:CreateLabel(FarmPage, "⚙ FPS")
-UI:CreateSlider(FarmPage, "FPS", 5, 240, _G.FPS, function(v)
+UI:CreateToggle(Farm,"Auto Quest",false,function(v)
+    _G.AutoQuest = v
+end)
+
+UI:CreateLabel(Farm,"⚙ FPS")
+UI:CreateSlider(Farm,"FPS",30,240,_G.FPS,function(v)
     _G.FPS = v
     if _G.FPS_LOCK and setfpscap then
         setfpscap(v)
     end
 end)
 
-UI:CreateToggle(FarmPage, "Enable FPS Lock", false, function(v)
+UI:CreateToggle(Farm,"Enable FPS Lock",false,function(v)
     _G.FPS_LOCK = v
     if setfpscap then
         setfpscap(v and _G.FPS or 999)
     end
 end)
 
--- =========================
--- ป้องกัน Skill Spawn / Camera Shake / AFK
--- =========================
-workspace.ChildAdded:Connect(function(a)
-    if a.Name == "Skill" then
-        a:Destroy()
-    end
+--================= ANTI AFK =================--
+player.Idled:Connect(function()
+    VirtualUser:Button2Down(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
+    task.wait(1)
+    VirtualUser:Button2Up(Vector2.new(0,0),workspace.CurrentCamera.CFrame)
 end)
 
-if player:FindFirstChild("PlayerScripts") and player.PlayerScripts:FindFirstChild("CameraShakeClient") then
-    player.PlayerScripts.CameraShakeClient.Disabled = true
+--=====================================================
+-- UTILS
+--=====================================================
+local function GetCharacter()
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp or not hum or hum.Health <= 0 then return end
+    return char, hrp, hum
 end
 
--- ระบบ AFK (กดเมาส์เสมือนทุก 60 วินาที)
-local vu = game:GetService("VirtualUser")
-player.Idled:Connect(function()
-    vu:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    vu:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-end)
-
--- =========================
--- ฟังก์ชันช่วยเหลือ Auto Quest
--- =========================
-local function CanAcceptQuest()
-    local Count = 0
-    for _, v in pairs(player.PlayerGui.Quests.Window.Grid.ScrollingFrame:GetChildren()) do
-        if v:IsA("Frame") and not (v:FindFirstChild("Completed") and v.Completed.Value) then
-            Count = Count + 1
+local function FindMob()
+    local mobsFolder = Workspace:FindFirstChild("Mobs")
+    if mobsFolder then
+        for _,m in ipairs(mobsFolder:GetChildren()) do
+            local h = m:FindFirstChildOfClass("Humanoid")
+            local hrp = m:FindFirstChild("HumanoidRootPart")
+            if h and hrp and h.Health > 0 then
+                return m, h, hrp
+            end
         end
     end
-    return Count < 5
+
+    for _,m in ipairs(Workspace:GetChildren()) do
+        if m:IsA("Model") and m ~= player.Character then
+            local h = m:FindFirstChildOfClass("Humanoid")
+            local hrp = m:FindFirstChild("HumanoidRootPart")
+            if h and hrp and h.Health > 0 then
+                return m, h, hrp
+            end
+        end
+    end
 end
 
--- =========================
--- Auto Kill + Skill + Loot
--- =========================
-spawn(function()
-    while task.wait(0.1) do
+--=====================================================
+-- ORIGINAL SKILL SYSTEM (ใช้สกิลแบบเดิม)
+--=====================================================
+local function UseAllSkills()
+    if not RS:FindFirstChild("Combat") then return end
+    if not RS.Combat:FindFirstChild("Skills") then return end
+    if not RS.Combat:FindFirstChild("RequestSkillUse") then return end
+
+    for _,skill in ipairs(RS.Combat.Skills:GetChildren()) do
         pcall(function()
-            if _G.AutoKill then
-                local target
-                for _, mob in pairs(workspace.Mobs:GetChildren()) do
-                    if mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0
-                       and mob:FindFirstChild("HumanoidRootPart") then
-                        target = mob
-                        break
-                    end
-                end
+            RS.Combat.RequestSkillUse:FireServer(skill.Name)
+        end)
+    end
+end
 
-                if target then
-                    -- ใช้ Skill กับ Mob ตัวนี้จนตาย
-                    while target and target.Parent and target.Humanoid.Health > 0 do
-                        for _, skill in pairs(game.ReplicatedStorage.Combat.Skills:GetChildren()) do
-                            task.spawn(function()
-                                game.ReplicatedStorage.Combat.RequestSkillUse:FireServer(skill.Name)
-                            end)
-                        end
+--=====================================================
+-- AUTO KILL (HOVER HEAD / SAFE)
+--=====================================================
+task.spawn(function()
+    while task.wait(0.2) do
+        if not _G.AutoKill then continue end
 
-                        -- Auto Loot เร็วสุด
-                        if _G.AutoLoot then
-                            for _, loot in pairs(workspace:GetDescendants()) do
-                                if loot.Name == "Loot" and loot:FindFirstChild("CollectLoot") then
-                                    task.spawn(function()
-                                        loot.CollectLoot:FireServer()
-                                    end)
-                                end
-                            end
-                        end
-                        task.wait(0.03)
-                    end
+        local char, hrp = GetCharacter()
+        if not char then continue end
+
+        local mob, hum, mobHRP = FindMob()
+        if not mob then continue end
+
+        while _G.AutoKill
+        and mob.Parent
+        and hum.Health > 0 do
+
+            local _, p = GetCharacter()
+            if not p then break end
+            if not mobHRP or not mobHRP.Parent then break end
+
+            p.CFrame = mobHRP.CFrame * CFrame.new(0, _G.HoverHeight, 0)
+            UseAllSkills()
+            task.wait(0.12)
+        end
+    end
+end)
+
+--=====================================================
+-- AUTO LOOT
+--=====================================================
+local Looted = {}
+
+Workspace.DescendantAdded:Connect(function(obj)
+    if _G.AutoLoot and obj.Name:lower():find("loot") then
+        if not Looted[obj] and obj:FindFirstChild("CollectLoot") then
+            Looted[obj] = true
+            pcall(function()
+                obj.CollectLoot:FireServer()
+            end)
+        end
+    end
+end)
+
+--=====================================================
+-- AUTO QUEST
+--=====================================================
+task.spawn(function()
+    while task.wait(1.5) do
+        if not _G.AutoQuest then continue end
+
+        pcall(function()
+            local board = Workspace:FindFirstChild("Environment")
+            and Workspace.Environment.Interactables.Quests:FindFirstChild("QuestBoard")
+
+            if board and board:FindFirstChild("ProximityPrompt") then
+                local _,hrp = GetCharacter()
+                if hrp then
+                    hrp.CFrame = board.CFrame * CFrame.new(0,2,0)
+                    fireproximityprompt(board.ProximityPrompt)
                 end
             end
         end)
     end
 end)
 
--- =========================
--- Auto Quest Logic
--- =========================
-spawn(function()
-    while task.wait(0.5) do
-        pcall(function()
-            if _G.AutoQuest then
-                if CanAcceptQuest() then
-                    local questBoard = workspace.Environment.Interactables.Quests.QuestBoard
-                    if questBoard and questBoard:FindFirstChild("ProximityPrompt") then
-                        player.Character.HumanoidRootPart.CFrame = questBoard.CFrame
-                        fireproximityprompt(questBoard.ProximityPrompt)
-                        task.wait(1)
-                    end
-                end
-            end
-        end)
-    end
-end)
-
--- =========================
--- ตั้งค่า FPS เริ่มต้น
--- =========================
+--================= FPS INIT =================--
 if setfpscap then
     setfpscap(_G.FPS_LOCK and _G.FPS or 999)
 end
