@@ -202,7 +202,7 @@ local player = Players.LocalPlayer
 _G.AutoKill    = false
 _G.AutoLoot    = false
 _G.AutoQuest   = false
-_G.HoverHeight = 6
+_G.HoverHeight = 10
 _G.FPS         = 60
 _G.FPS_LOCK    = false
 
@@ -226,7 +226,7 @@ UI:CreateToggle(Farm,"Auto Quest",false,function(v)
 end)
 
 UI:CreateLabel(Farm,"⚙ FPS")
-UI:CreateSlider(Farm,"FPS",30,240,_G.FPS,function(v)
+UI:CreateSlider(Farm,"FPS",1,120,_G.FPS,function(v)
     _G.FPS = v
     if _G.FPS_LOCK and setfpscap then
         setfpscap(v)
@@ -367,3 +367,4 @@ end)
 if setfpscap then
     setfpscap(_G.FPS_LOCK and _G.FPS or 999)
 end
+
